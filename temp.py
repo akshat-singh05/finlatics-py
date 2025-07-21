@@ -107,15 +107,14 @@
         some operating systems, this makes no difference.
 
     NOTE: Keep the return value for as long as you want your file to exist !
-        """ #XXX: write a "load_source"?
+        """ 
         from .source import importable, getname
         import tempfile
         kwds.setdefault('delete', True)
-        kwds.pop('suffix', '') # this is *always* '.py'
+        kwds.pop('suffix', '') 
         alias = kwds.pop('alias', '') #XXX: include an alias so a name is known
         name = str(alias) or getname(object)
         name = "\n#NAME: %s\n" % name
-        #XXX: assumes kwds['dir'] is writable and on $PYTHONPATH
         file = tempfile.NamedTemporaryFile(suffix='.py', **kwds)
         file.write(b(''.join([importable(object, alias=alias),name])))
         file.flush()
@@ -243,7 +242,6 @@
         alias = kwds.pop('alias', '') #XXX: include an alias so a name is known
         name = str(alias) or getname(object)
         name = "\n#NAME: %s\n" % name
-        #XXX: assumes kwds['dir'] is writable and on $PYTHONPATH
         file = StringIO()
         file.write(b(''.join([importable(object, alias=alias),name])))
         file.flush()
@@ -251,7 +249,6 @@
 
 
     del contextlib
-
 
     # EOF
 
