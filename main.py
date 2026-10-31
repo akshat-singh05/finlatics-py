@@ -5,6 +5,14 @@ Finlatics-Py: Online Advertising Performance Analysis & ML Pipeline
 End-to-end data science pipeline that loads, cleans, analyzes,
 visualizes, and builds predictive models on advertising performance data.
 
+Data:
+    Reads data/raw/online_advertising_performance_data.csv (never modified)
+    and writes the cleaned, KPI-enriched table to data/processed/.
+
+Migration status:
+    Load -> clean -> KPIs run on the real Finlatics dataset. Charts,
+    insights and ML are skipped until migrated (DOWNSTREAM_STAGES_MIGRATED).
+
 Usage:
     python main.py                          # Full pipeline (analysis + ML)
     python main.py --target high_roi        # ML with ROI classification
@@ -18,6 +26,7 @@ Outputs:
 """
 
 import sys
+import time
 import argparse
 import joblib
 from pathlib import Path
@@ -26,16 +35,20 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from analysis.data_loader import load_data, inspect_data
+from utils.logger import get_logger
+from analysis.data_loader import DEFAULT_RAW_PATH, load_data, inspect_data
 from analysis.data_cleaning import clean_data
 from analysis.metrics import compute_kpis, summarize_by, get_overall_summary
-from analysis.visualizations import generate_all_charts
-from analysis.insights import generate_insights
-from models.feature_engineering import prepare_features
-from models.trainer import train_all_models
-from models.evaluator import evaluate_all_models
-from models.explainability import explain_model
-from models.ml_visualizations import generate_ml_diagnostics
+
+logger = get_logger("pipeline")
+
+PROCESSED_PATH = PROJECT_ROOT / "data" / "processed" / "advertising_clean.csv"
+
+# Charts, insights and ML still expect the old synthetic schema
+# (channel/device/impressions/...). Flip this once they are migrated.
+DOWNSTREAM_STAGES_MIGRATED = False
+
+SUMMARY_DIMENSIONS = ["campaign_number", "user_engagement", "banner", "placement"]
 
 
 def parse_args():
@@ -62,10 +75,14 @@ def parse_args():
 def main():
     """Run the full analysis and ML pipeline."""
     args = parse_args()
-    data_path = PROJECT_ROOT / "data" / "online_advertising_performance_data.csv"
+    data_path = DEFAULT_RAW_PATH
     output_dir = PROJECT_ROOT / "output"
 
-    total_steps = 6 if args.no_ml else 11
+    if not DOWNSTREAM_STAGES_MIGRATED:
+        total_steps = 4
+    else:
+        total_steps = 6 if args.no_ml else 11
+    pipeline_start = time.time()
 
     print("=" * 60)
     print("  FINLATICS-PY: Advertising Performance Analysis")
@@ -73,13 +90,21 @@ def main():
         print(f"  ML Target: {args.target}")
     print("=" * 60)
 
+    logger.info("Pipeline started | ML=%s | target=%s", not args.no_ml, args.target)
+
     # ==================================================================
     # PHASE 1: DATA ANALYSIS
     # ==================================================================
 
     # Step 1: Load Data
     print(f"\n[STEP 1/{total_steps}] Loading data...")
-    df = load_data(data_path)
+    try:
+        df = load_data(data_path)
+        logger.info("Data loaded: %d rows from %s", len(df), data_path.name)
+    except FileNotFoundError as e:
+        logger.error("Data file not found: %s", e)
+        print(f"\n[ERROR] {e}")
+        return None
 
     # Step 2: Inspect Raw Data
     print(f"\n[STEP 2/{total_steps}] Inspecting raw data...")
@@ -87,27 +112,56 @@ def main():
 
     # Step 3: Clean Data
     print(f"\n[STEP 3/{total_steps}] Cleaning data...")
-    df = clean_data(df)
+    try:
+        df = clean_data(df)
+        logger.info("Data cleaned: %d rows remaining", len(df))
+    except Exception as e:
+        logger.error("Data cleaning failed: %s", e)
+        print(f"\n[ERROR] Cleaning failed: {e}")
+        return None
 
     # Step 4: Compute KPIs & Summarize
     print(f"\n[STEP 4/{total_steps}] Computing KPIs...")
     df = compute_kpis(df)
     get_overall_summary(df)
 
-    # Print campaign summary table
-    print("\n--- Campaign Summary ---")
-    campaign_summary = summarize_by(df, "campaign")
-    print(campaign_summary.to_string())
+    summary_cols = ["revenue", "cost", "firm_margin", "post_click_sales_amount",
+                    "ctr", "conversion_rate", "firm_roi", "advertiser_roas",
+                    "record_count", "active_days"]
+    for dim in SUMMARY_DIMENSIONS:
+        print(f"\n--- Summary by {dim} ---")
+        print(summarize_by(df, dim)[summary_cols].round(4).to_string())
 
-    # Print channel summary table
-    print("\n--- Channel Summary ---")
-    channel_summary = summarize_by(df, "channel")
-    print(channel_summary.to_string())
+    # Save processed dataset (raw file is never modified)
+    PROCESSED_PATH.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(PROCESSED_PATH, index=False)
+    print(f"\n  Processed dataset saved: {PROCESSED_PATH}")
+    logger.info("Processed dataset saved: %s", PROCESSED_PATH)
+
+    if not DOWNSTREAM_STAGES_MIGRATED:
+        print("\n" + "=" * 60)
+        print("  DATA PREPARATION COMPLETE")
+        print("=" * 60)
+        print(f"  Records analyzed: {len(df):,}")
+        print("  Charts, insights and ML are not yet migrated to the real")
+        print("  dataset schema; skipping them.")
+        print(f"  Total time:       {time.time() - pipeline_start:.1f}s")
+        print("=" * 60)
+        return df
+
+    from analysis.visualizations import generate_all_charts
+    from analysis.insights import generate_insights
+    from models.feature_engineering import prepare_features
+    from models.trainer import train_all_models, save_training_metadata
+    from models.evaluator import evaluate_all_models
+    from models.explainability import explain_model
+    from models.ml_visualizations import generate_ml_diagnostics
 
     # Step 5: Generate Visualizations
     print(f"\n[STEP 5/{total_steps}] Generating visualizations to {output_dir}/...")
     saved_charts = generate_all_charts(df, output_dir)
     print(f"\nSaved {len(saved_charts)} charts to {output_dir}/")
+    logger.info("Generated %d analysis charts", len(saved_charts))
 
     # Step 6: Business Insights
     print(f"\n[STEP 6/{total_steps}] Generating business insights...")
@@ -120,13 +174,28 @@ def main():
     if not args.no_ml:
         # Step 7: Feature Engineering
         print(f"\n[STEP 7/{total_steps}] Preparing features for ML...")
-        prepared_data = prepare_features(
-            df, target_type=args.target, test_size=args.test_size
-        )
+        try:
+            prepared_data = prepare_features(
+                df, target_type=args.target, test_size=args.test_size
+            )
+            logger.info("Features prepared: %d features, %d train / %d test",
+                         prepared_data["feature_count"],
+                         len(prepared_data["X_train"]),
+                         len(prepared_data["X_test"]))
+        except Exception as e:
+            logger.error("Feature engineering failed: %s", e)
+            print(f"\n[ERROR] Feature engineering failed: {e}")
+            return df
 
         # Step 8: Train Models
         print(f"\n[STEP 8/{total_steps}] Training models...")
-        trained_models = train_all_models(prepared_data)
+        try:
+            trained_models = train_all_models(prepared_data)
+            logger.info("Trained %d models", len(trained_models))
+        except Exception as e:
+            logger.error("Model training failed: %s", e)
+            print(f"\n[ERROR] Model training failed: {e}")
+            return df
 
         # Step 9: Evaluate & Compare Models
         print(f"\n[STEP 9/{total_steps}] Evaluating models...")
@@ -140,26 +209,43 @@ def main():
         model_path = model_dir / f"best_pipeline_{args.target}.joblib"
         joblib.dump(trained_models[best_model_name]["pipeline"], model_path)
         print(f"\n  Best pipeline saved: {model_path}")
+        logger.info("Best pipeline saved: %s (%s)", model_path.name, best_model_name)
+
+        # Save training metadata
+        meta_path = save_training_metadata(
+            model_path, best_model_name, comparison, prepared_data
+        )
+        logger.info("Training metadata saved: %s", meta_path)
 
         # Step 10: Model Explainability (SHAP)
         print(f"\n[STEP 10/{total_steps}] Explaining best model with SHAP...")
-        explain_results = explain_model(
-            pipeline=trained_models[best_model_name]["pipeline"],
-            X_train=prepared_data["X_train"],
-            X_test=prepared_data["X_test"],
-            feature_names=prepared_data["feature_names"],
-            model_name=best_model_name,
-            task_type=prepared_data["task_type"],
-            output_dir=output_dir,
-        )
+        try:
+            explain_results = explain_model(
+                pipeline=trained_models[best_model_name]["pipeline"],
+                X_train=prepared_data["X_train"],
+                X_test=prepared_data["X_test"],
+                feature_names=prepared_data["feature_names"],
+                model_name=best_model_name,
+                task_type=prepared_data["task_type"],
+                output_dir=output_dir,
+            )
+            logger.info("SHAP explainability completed for %s", best_model_name)
+        except Exception as e:
+            logger.warning("SHAP explainability failed (non-critical): %s", e)
+            print(f"\n  [WARN] SHAP failed: {e}")
 
         # Step 11: ML Diagnostic Visualizations
         print(f"\n[STEP 11/{total_steps}] Generating ML diagnostic charts...")
-        generate_ml_diagnostics(trained_models, prepared_data, output_dir)
+        try:
+            generate_ml_diagnostics(trained_models, prepared_data, output_dir)
+        except Exception as e:
+            logger.warning("ML diagnostics failed (non-critical): %s", e)
+            print(f"\n  [WARN] ML diagnostics failed: {e}")
 
     # ==================================================================
     # DONE
     # ==================================================================
+    elapsed = time.time() - pipeline_start
     print("\n" + "=" * 60)
     print("  PIPELINE COMPLETE")
     print("=" * 60)
@@ -170,7 +256,11 @@ def main():
         print(f"  Best model:       {best_model_name}")
         print(f"  Model saved to:   {model_path}")
     print(f"  Output directory:  {output_dir}")
+    print(f"  Total time:        {elapsed:.1f}s")
     print("=" * 60)
+
+    logger.info("Pipeline complete in %.1fs | %d records | %d charts",
+                elapsed, len(df), len(saved_charts))
 
     return df
 

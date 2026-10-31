@@ -123,10 +123,10 @@ def generate_advertising_data(n_rows: int = 500, seed: int = 42) -> pd.DataFrame
 def main():
     """Generate and save the advertising dataset."""
     project_root = Path(__file__).resolve().parent.parent
-    output_dir = project_root / "data"
-    output_dir.mkdir(exist_ok=True)
+    output_dir = project_root / "data" / "synthetic"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    output_path = output_dir / "online_advertising_performance_data.csv"
+    output_path = output_dir / "synthetic_advertising_data.csv"
 
     print("Generating synthetic advertising performance data...")
     df = generate_advertising_data(n_rows=500, seed=42)
