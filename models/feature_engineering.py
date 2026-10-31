@@ -16,6 +16,10 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 
+from utils.logger import get_logger
+
+logger = get_logger("feature_engineering")
+
 
 # =====================================================================
 # LEAKAGE PREVENTION CONFIG
@@ -68,17 +72,20 @@ def create_target(df: pd.DataFrame, target_type: str = "high_roi") -> pd.DataFra
         df["target"] = (df["conversions"] > median_conv).astype(int)
         print(f"  Target: high_conversion (conversions > {median_conv})")
         print(f"  Class distribution: {df['target'].value_counts().to_dict()}")
+        logger.info("Target: high_conversion (threshold=%s), distribution=%s", median_conv, df['target'].value_counts().to_dict())
 
     elif target_type == "revenue":
         df["target"] = df["revenue"]
         print(f"  Target: revenue (continuous)")
         print(f"  Range: ${df['target'].min():.2f} - ${df['target'].max():.2f}")
         print(f"  Mean:  ${df['target'].mean():.2f}")
+        logger.info("Target: revenue, range=%.2f-%.2f, mean=%.2f", df['target'].min(), df['target'].max(), df['target'].mean())
 
     elif target_type == "high_roi":
         df["target"] = (df["roi"] > 0).astype(int)
         print(f"  Target: high_roi (ROI > 0 = profitable)")
         print(f"  Class distribution: {df['target'].value_counts().to_dict()}")
+        logger.info("Target: high_roi, distribution=%s", df['target'].value_counts().to_dict())
 
     else:
         raise ValueError(f"Unknown target_type: {target_type}. "
@@ -155,6 +162,7 @@ def create_derived_features(df: pd.DataFrame) -> pd.DataFrame:
     count += 1
 
     print(f"  Created {count} derived features")
+    logger.info("Created %d derived features", count)
     return df
 
 
@@ -194,6 +202,7 @@ def create_interaction_features(df: pd.DataFrame) -> pd.DataFrame:
         count += 1
 
     print(f"  Created {count} interaction features")
+    logger.info("Created %d interaction features", count)
     return df
 
 
@@ -329,6 +338,8 @@ def prepare_features(
     print(f"  Train: {len(X_train)} | Test: {len(X_test)} | Features: {len(feature_cols)}")
     print(f"  Task type: {task_type}")
     print("=" * 60)
+    logger.info("Feature prep complete: %d train, %d test, %d features, task=%s",
+                len(X_train), len(X_test), len(feature_cols), task_type)
 
     return {
         "X_train": X_train,

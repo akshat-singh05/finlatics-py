@@ -20,6 +20,10 @@ import pandas as pd
 import shap
 from pathlib import Path
 
+from utils.logger import get_logger
+
+logger = get_logger("explainability")
+
 
 # Chart style
 PALETTE = ["#6366F1", "#EC4899", "#10B981", "#F59E0B", "#3B82F6", "#8B5CF6"]
@@ -119,6 +123,11 @@ def explain_model(
     _plot_shap_summary(shap_values, X_test_df, transformed_names, task_type, model_name, output_dir)
     _plot_shap_bar(importance_df, model_name, output_dir)
     _plot_shap_waterfall(shap_values, X_test_df, transformed_names, task_type, model_name, output_dir)
+
+    # Export importance to CSV
+    csv_path = output_dir / "shap_importance.csv"
+    importance_df.to_csv(csv_path, index=False)
+    logger.info("SHAP importance exported to %s (%d features)", csv_path.name, len(importance_df))
 
     print("=" * 60)
 
@@ -376,3 +385,88 @@ def _plot_shap_waterfall(shap_values, X_test_df, feature_names, task_type, model
     fig.savefig(filepath, bbox_inches="tight", dpi=150)
     plt.close(fig)
     print(f"  [OK] Saved: {filepath.name}")
+
+
+def explain_single_prediction(
+    pipeline,
+    input_df: pd.DataFrame,
+    feature_names: list = None,
+    task_type: str = "classification",
+) -> dict:
+    """
+    Compute SHAP explanation for a single prediction input.
+
+    Reusable by both the Streamlit dashboard and Flask API.
+
+    Parameters
+    ----------
+    pipeline : sklearn Pipeline
+        Fitted pipeline (preprocessor + model).
+    input_df : pd.DataFrame
+        Single-row DataFrame with raw features.
+    feature_names : list, optional
+        Original feature column names.
+    task_type : str
+        "classification" or "regression".
+
+    Returns
+    -------
+    dict
+        - shap_values: array of SHAP values for this input
+        - feature_impacts: list of (feature_name, shap_value) sorted by |impact|
+        - top_positive: features pushing prediction UP
+        - top_negative: features pushing prediction DOWN
+    """
+    model = pipeline.named_steps["model"]
+    preprocessor = pipeline.named_steps["preprocessor"]
+
+    X_transformed = preprocessor.transform(input_df)
+
+    try:
+        transformed_names = list(preprocessor.get_feature_names_out())
+    except Exception:
+        transformed_names = [f"feature_{i}" for i in range(X_transformed.shape[1])]
+
+    if not isinstance(X_transformed, pd.DataFrame):
+        X_df = pd.DataFrame(X_transformed, columns=transformed_names)
+    else:
+        X_df = X_transformed
+
+    model_type = type(model).__name__
+    if hasattr(model, "estimators_") or "Boosting" in model_type or "Forest" in model_type:
+        explainer = shap.TreeExplainer(model)
+    else:
+        explainer = shap.KernelExplainer(
+            model.predict_proba if task_type == "classification" else model.predict,
+            X_df,
+        )
+
+    shap_values = explainer.shap_values(X_df)
+
+    if isinstance(shap_values, list):
+        sv = np.array(shap_values[1]) if len(shap_values) == 2 else np.array(shap_values[0])
+    else:
+        sv = np.array(shap_values)
+
+    sample_shap = sv[0]
+    n = min(len(transformed_names), len(sample_shap))
+
+    impacts = sorted(
+        [(transformed_names[i], float(sample_shap[i])) for i in range(n)],
+        key=lambda x: abs(x[1]),
+        reverse=True,
+    )
+
+    top_positive = [(name, val) for name, val in impacts if val > 0][:5]
+    top_negative = [(name, val) for name, val in impacts if val < 0][:5]
+
+    logger.info("Single prediction explained: %d features, top=%s",
+                n, impacts[0][0] if impacts else "N/A")
+
+    return {
+        "shap_values": sample_shap[:n],
+        "feature_names": transformed_names[:n],
+        "feature_impacts": impacts[:15],
+        "top_positive": top_positive,
+        "top_negative": top_negative,
+    }

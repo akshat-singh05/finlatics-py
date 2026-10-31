@@ -18,17 +18,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 from pathlib import Path
-
-
-PALETTE = ["#6366F1", "#EC4899", "#10B981", "#F59E0B", "#3B82F6", "#8B5CF6"]
-COLORS = {
-    "primary": "#6366F1",
-    "success": "#10B981",
-    "danger": "#EF4444",
-    "warning": "#F59E0B",
-    "info": "#3B82F6",
-    "gold": "#D97706",
-}
+from utils.theme import PALETTE, COLORS
 
 
 def generate_insights(df: pd.DataFrame, output_dir: str | Path = "output") -> dict:

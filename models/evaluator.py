@@ -26,6 +26,9 @@ from sklearn.metrics import (
 )
 
 from models.trainer import get_feature_importance
+from utils.logger import get_logger
+
+logger = get_logger("evaluator")
 
 
 # Chart style
@@ -105,7 +108,14 @@ def evaluate_all_models(
     if task_type == "classification":
         _plot_confusion_matrices(trained_models, y_test, output_dir)
 
+    # Export comparison table
+    csv_path = output_dir / "model_comparison.csv"
+    comparison.to_csv(csv_path)
+    logger.info("Model comparison saved to %s", csv_path.name)
+
     print("=" * 60)
+    logger.info("Best model: %s (%s=%.4f, CV=%.4f)",
+                best_model_name, best_metric, best_score, cv_mean)
 
     return comparison, best_model_name
 
@@ -175,11 +185,15 @@ def _plot_model_comparison(comparison: pd.DataFrame, task_type: str, output_dir:
     if task_type == "classification":
         metrics = ["accuracy", "f1_score", "cv_mean"]
         titles = ["Test Accuracy", "Test F1 Score", "CV Mean (F1)"]
+        if "roc_auc" in comparison.columns and comparison["roc_auc"].notna().all():
+            metrics.append("roc_auc")
+            titles.append("ROC AUC")
     else:
         metrics = ["r2_score", "rmse", "cv_mean"]
         titles = ["Test R-squared", "Test RMSE", "CV Mean (R2)"]
 
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    n_panels = len(metrics)
+    fig, axes = plt.subplots(1, n_panels, figsize=(6 * n_panels, 5))
 
     for ax, metric, title in zip(axes, metrics, titles):
         values = comparison[metric]

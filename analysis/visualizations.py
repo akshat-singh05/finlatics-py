@@ -14,19 +14,8 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from utils.theme import PALETTE, COLORS
 
-
-# --- Style Configuration ---
-COLORS = {
-    "primary": "#6366F1",    # Indigo
-    "secondary": "#EC4899",  # Pink
-    "success": "#10B981",    # Emerald
-    "warning": "#F59E0B",    # Amber
-    "danger": "#EF4444",     # Red
-    "info": "#3B82F6",       # Blue
-}
-
-PALETTE = ["#6366F1", "#EC4899", "#10B981", "#F59E0B", "#3B82F6", "#8B5CF6"]
 
 def _setup_style():
     """Apply a clean, modern chart style."""
@@ -41,7 +30,7 @@ def _setup_style():
         "xtick.color": "#6B7280",
         "ytick.color": "#6B7280",
         "font.family": "sans-serif",
-        "figure.dpi": 150,
+        "figure.dpi": 200,
     })
 
 
@@ -76,6 +65,7 @@ def generate_all_charts(df: pd.DataFrame, output_dir: str | Path = "output") -> 
         ("06_device_distribution.png", _chart_device_distribution),
         ("07_roi_comparison.png", _chart_roi_comparison),
         ("08_monthly_trends.png", _chart_monthly_trends),
+        ("09_spend_efficiency.png", _chart_spend_efficiency),
     ]
 
     for filename, func in chart_funcs:
@@ -109,10 +99,11 @@ def _chart_campaign_performance(df: pd.DataFrame, filepath: Path):
 
     ax.set_yticks(list(y))
     ax.set_yticklabels(campaign_data.index)
-    ax.set_xlabel("Amount ($)")
     ax.set_title("Campaign Performance: Spend vs Revenue", fontsize=14, fontweight="bold", pad=15)
     ax.legend(loc="lower right")
     ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax.set_xlabel("Amount ($)", fontsize=11)
+    ax.set_ylabel("Campaign", fontsize=11)
 
     plt.tight_layout()
     fig.savefig(filepath, bbox_inches="tight")
@@ -159,8 +150,8 @@ def _chart_spend_vs_revenue(df: pd.DataFrame, filepath: Path):
     max_val = max(df["spend"].max(), df["revenue"].max())
     ax.plot([0, max_val], [0, max_val], "--", color="#9CA3AF", linewidth=1, alpha=0.7, label="Break-even")
 
-    ax.set_xlabel("Spend ($)")
-    ax.set_ylabel("Revenue ($)")
+    ax.set_xlabel("Spend ($)", fontsize=11)
+    ax.set_ylabel("Revenue ($)", fontsize=11)
     ax.set_title("Spend vs Revenue by Campaign", fontsize=14, fontweight="bold", pad=15)
     ax.legend(fontsize=9, loc="upper left")
     ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
@@ -306,3 +297,52 @@ def _chart_monthly_trends(df: pd.DataFrame, filepath: Path):
     plt.tight_layout()
     fig.savefig(filepath, bbox_inches="tight")
     plt.close(fig)
+
+
+def _chart_spend_efficiency(df: pd.DataFrame, filepath: Path):
+    """Bubble chart: spend vs revenue, sized by conversions, colored by campaign."""
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    camp_data = df.groupby("campaign").agg(
+        total_spend=("spend", "sum"),
+        total_revenue=("revenue", "sum"),
+        total_conversions=("conversions", "sum"),
+    ).reset_index()
+
+    camp_data["profit"] = camp_data["total_revenue"] - camp_data["total_spend"]
+
+    sizes = camp_data["total_conversions"]
+    max_s = sizes.max() if sizes.max() > 0 else 1
+    bubble_sizes = (sizes / max_s * 800).clip(lower=60)
+
+    for i, (_, row) in enumerate(camp_data.iterrows()):
+        color = PALETTE[i % len(PALETTE)]
+        edge = COLORS["success"] if row["profit"] > 0 else COLORS["danger"]
+        ax.scatter(
+            row["total_spend"], row["total_revenue"],
+            s=bubble_sizes.iloc[i], color=color, alpha=0.7,
+            edgecolors=edge, linewidth=2, label=row["campaign"],
+        )
+        ax.annotate(
+            f"{row['campaign']}\n{row['total_conversions']:,} conv",
+            xy=(row["total_spend"], row["total_revenue"]),
+            fontsize=8, ha="center", va="bottom",
+            xytext=(0, 12), textcoords="offset points",
+        )
+
+    max_val = max(camp_data["total_spend"].max(), camp_data["total_revenue"].max())
+    ax.plot([0, max_val * 1.1], [0, max_val * 1.1], "--",
+            color="#9CA3AF", linewidth=1, alpha=0.7, label="Break-even")
+
+    ax.set_xlabel("Total Spend ($)", fontsize=11)
+    ax.set_ylabel("Total Revenue ($)", fontsize=11)
+    ax.set_title("Spend Efficiency (bubble size = conversions)",
+                 fontsize=14, fontweight="bold", pad=15)
+    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax.legend(fontsize=8, loc="upper left", ncol=2)
+
+    plt.tight_layout()
+    fig.savefig(filepath, bbox_inches="tight")
+    plt.close(fig)
+

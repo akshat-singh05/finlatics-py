@@ -13,6 +13,7 @@ Models:
     Regression: Ridge, Random Forest, Gradient Boosting
 """
 
+import json
 import time
 import warnings
 import numpy as np
@@ -30,6 +31,10 @@ from sklearn.ensemble import (
 
 from sklearn.model_selection import RandomizedSearchCV, cross_val_score
 from scipy.stats import randint, uniform, loguniform
+
+from utils.logger import get_logger
+
+logger = get_logger("trainer")
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -282,9 +287,12 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
         print(f"    Best CV score: {search.best_score_:.4f}")
         print(f"    CV mean +/- std: {cv_scores.mean():.4f} +/- {cv_scores.std():.4f}")
         print(f"    Best params: {best_params}")
+        logger.info("Model [%s] trained: CV=%.4f±%.4f, time=%.1fs",
+                    name, cv_scores.mean(), cv_scores.std(), train_time)
 
     print(f"\n  Trained {len(results)} optimized models.")
     print("=" * 60)
+    logger.info("Training complete: %d models", len(results))
 
     return results
 
@@ -348,3 +356,59 @@ def get_feature_importance(pipeline, feature_names_in: list) -> pd.DataFrame:
         df["importance_pct"] = (df["importance"] / total * 100).round(2)
 
     return df
+
+
+# =====================================================================
+# TRAINING METADATA
+# =====================================================================
+
+def save_training_metadata(
+    model_path,
+    best_model_name: str,
+    comparison_df,
+    prepared_data: dict,
+) -> str:
+    """
+    Save training metadata as a JSON sidecar file alongside the model.
+
+    Parameters
+    ----------
+    model_path : Path
+        Path to the saved .joblib pipeline file.
+    best_model_name : str
+        Name of the best model.
+    comparison_df : pd.DataFrame
+        Model comparison table from evaluator.
+    prepared_data : dict
+        Output from feature_engineering.prepare_features().
+
+    Returns
+    -------
+    str
+        Path to the saved metadata JSON file.
+    """
+    from pathlib import Path
+    from datetime import datetime
+
+    model_path = Path(model_path)
+    meta_path = model_path.with_suffix(".meta.json")
+
+    metadata = {
+        "timestamp": datetime.now().isoformat(),
+        "target_type": prepared_data.get("target_type"),
+        "task_type": prepared_data.get("task_type"),
+        "best_model": best_model_name,
+        "feature_count": prepared_data.get("feature_count"),
+        "feature_names": prepared_data.get("feature_names", []),
+        "numeric_features": prepared_data.get("numeric_features", []),
+        "categorical_features": prepared_data.get("categorical_features", []),
+        "train_samples": len(prepared_data.get("X_train", [])),
+        "test_samples": len(prepared_data.get("X_test", [])),
+        "model_comparison": comparison_df.to_dict(orient="index")
+        if comparison_df is not None else {},
+    }
+
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2, default=str)
+
+    return str(meta_path)

@@ -61,6 +61,8 @@ finlatics-py/
 │   └── generate_data.py        # Synthetic dataset generator
 ├── output/                     # Generated charts (auto-created)
 ├── main.py                     # Pipeline entry point (analysis + ML)
+├── streamlit_app.py            # Interactive Streamlit dashboard
+├── app.py                      # Flask REST API
 ├── requirements.txt
 ├── LICENSE
 └── README.md
@@ -96,6 +98,35 @@ python main.py                           # Default: high ROI classification
 python main.py --target revenue          # Revenue prediction (regression)
 python main.py --target high_conversion  # Conversion classification
 python main.py --no-ml                   # Analysis only, skip ML
+```
+
+### 5. Launch the interactive dashboard
+
+```bash
+streamlit run streamlit_app.py
+```
+
+### 6. Start the REST API
+
+```bash
+python app.py                            # Runs on http://localhost:5000
+```
+
+**API Endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| GET | `/metrics` | Overall KPIs (supports `?campaign=X&channel=Y&device=Z`) |
+| GET | `/metrics/campaign` | Per-campaign breakdown |
+| GET | `/metrics/channel` | Per-channel breakdown |
+| POST | `/predict` | Predict profitability from JSON input |
+
+**Example prediction:**
+```bash
+curl -X POST http://localhost:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"campaign":"Brand Awareness","channel":"Google Ads","device":"Mobile","impressions":5000,"clicks":80,"spend":150,"conversions":5,"bounce_rate":0.5,"avg_session_duration":120}'
 ```
 
 This will:
@@ -167,7 +198,8 @@ This will:
 - [x] SHAP model explainability (summary, importance, waterfall)
 - [x] Business insights engine (channel efficiency, budget recommendations)
 - [x] ML diagnostic visualizations (prediction analysis, residuals)
-- [ ] Interactive dashboard
+- [x] Interactive Streamlit dashboard (5 tabs, live filters, predictions)
+- [x] Flask REST API (metrics + predictions)
 
 ---
 
@@ -188,5 +220,5 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) for de
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/akshat-singh05">Akshat Singh</a>
+  Made by <a href="https://github.com/akshat-singh05">Akshat Singh</a>
 </p>
