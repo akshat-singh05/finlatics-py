@@ -1,355 +1,167 @@
 """
-Advanced feature engineering for machine learning.
+Feature engineering for the revenue prediction model.
 
-Provides a reusable, pipeline-oriented approach to feature creation:
-  - Derived KPI features (CTR, CPC, Conversion Rate, Cost per Conversion)
-  - Interaction features (campaign x channel, channel x device)
-  - Time-based features (day, month, weekday, is_weekend)
-  - Leakage-safe target creation and column management
+Business question (Advert Firm A): "If we buy this inventory, how much
+revenue will it earn, and will it make a margin?"
 
-NOTE: Categorical encoding and feature scaling are handled INSIDE
-the sklearn Pipeline (in trainer.py) to prevent data leakage during
-cross-validation and hyperparameter search.
+    target      log1p(revenue) of one row
+                (one day × campaign × audience × banner × placement)
+    inputs      only what is known BEFORE the ads run:
+                campaign, engagement, banner, placement, weekday,
+                day index, log(displays), log(cost)
+    derived     predicted margin = expm1(prediction) - cost;
+                profitable if predicted margin > 0
+
+Assumption: displays and cost are fixed at purchase (inventory bought at a
+CPM). Within a segment the CPM varies by ~17%, consistent with that.
+
+Leakage prevention:
+    - clicks, conversions, sales and every KPI derived from them are
+      outcomes of the delivery and are never used as inputs
+    - the split is by TIME (train on earlier days, test on later days);
+      the data has a strong downward trend, so a random split would let
+      the model learn from the future
+    - encoding and scaling happen inside the sklearn Pipeline (trainer.py)
 """
 
-import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+import pandas as pd
 
 from utils.logger import get_logger
 
 logger = get_logger("feature_engineering")
 
 
-# =====================================================================
-# LEAKAGE PREVENTION CONFIG
-# =====================================================================
+TARGET_TYPE = "revenue"
+DEFAULT_TEST_START = pd.Timestamp("2020-06-10")  # last 3 weeks held out
+PERIOD_START = pd.Timestamp("2020-04-01")
 
-LEAKAGE_MAP = {
-    "high_conversion": [
-        "conversions", "conversion_rate", "revenue",
-        "revenue_per_conversion", "roas", "roi",
-        "cost_per_conversion",
-    ],
-    "revenue": [
-        "roas", "roi", "revenue_per_conversion",
-    ],
-    "high_roi": [
-        "roi", "roas", "revenue", "revenue_per_conversion",
-    ],
-}
+CATEGORICAL_FEATURES = ["campaign_number", "user_engagement", "banner", "placement", "weekday"]
+NUMERIC_FEATURES = ["log_displays", "log_cost", "day_index"]
+FEATURE_COLUMNS = CATEGORICAL_FEATURES + NUMERIC_FEATURES
 
-DROP_ALWAYS = ["date"]
+# Columns that are outcomes of the ad delivery: never valid inputs
+LEAKAGE_COLUMNS = [
+    "clicks", "revenue", "post_click_conversions", "post_click_sales_amount",
+    "firm_margin", "ctr", "conversion_rate", "firm_cpc", "firm_roi",
+    "advertiser_cpc", "advertiser_cpa", "advertiser_roas", "avg_order_value",
+    "flag_clicks_gt_displays", "flag_conv_gt_clicks", "flag_conv_without_clicks",
+]
+
+# Kept alongside the split for business evaluation (not model inputs)
+EVAL_COLUMNS = ["date", "displays", "cost", "revenue", "firm_margin"] + CATEGORICAL_FEATURES[:4]
 
 
-# =====================================================================
-# 1. TARGET VARIABLE CREATION
-# =====================================================================
-
-def create_target(df: pd.DataFrame, target_type: str = "high_roi") -> pd.DataFrame:
+def build_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Create the target variable based on the chosen prediction task.
+    Build model input features from a cleaned frame (or a prediction request).
+
+    Required columns: date, campaign_number, user_engagement, banner,
+    placement, displays, cost. Used identically at training and at
+    prediction time so the API/dashboard cannot drift from training.
 
     Parameters
     ----------
     df : pd.DataFrame
-        DataFrame with KPI columns already computed.
-    target_type : str
-        One of:
-        - "high_conversion": binary, 1 if conversions > median
-        - "revenue": continuous revenue value (regression)
-        - "high_roi": binary, 1 if ROI > 0 (profitable)
+        Rows with the required columns.
 
     Returns
     -------
     pd.DataFrame
-        DataFrame with a 'target' column added.
+        Exactly FEATURE_COLUMNS, in order.
     """
-    df = df.copy()
+    missing = {"date", "displays", "cost", *CATEGORICAL_FEATURES[:4]} - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing columns for feature building: {sorted(missing)}")
 
-    if target_type == "high_conversion":
-        median_conv = df["conversions"].median()
-        df["target"] = (df["conversions"] > median_conv).astype(int)
-        print(f"  Target: high_conversion (conversions > {median_conv})")
-        print(f"  Class distribution: {df['target'].value_counts().to_dict()}")
-        logger.info("Target: high_conversion (threshold=%s), distribution=%s", median_conv, df['target'].value_counts().to_dict())
+    dates = pd.to_datetime(df["date"])
+    X = pd.DataFrame(index=df.index)
+    for col in CATEGORICAL_FEATURES[:4]:
+        X[col] = df[col].astype(str)
+    X["weekday"] = dates.dt.day_name()
+    X["log_displays"] = np.log1p(df["displays"].astype(float))
+    X["log_cost"] = np.log1p(df["cost"].astype(float))
+    X["day_index"] = (dates - PERIOD_START).dt.days.astype(float)
 
-    elif target_type == "revenue":
-        df["target"] = df["revenue"]
-        print(f"  Target: revenue (continuous)")
-        print(f"  Range: ${df['target'].min():.2f} - ${df['target'].max():.2f}")
-        print(f"  Mean:  ${df['target'].mean():.2f}")
-        logger.info("Target: revenue, range=%.2f-%.2f, mean=%.2f", df['target'].min(), df['target'].max(), df['target'].mean())
-
-    elif target_type == "high_roi":
-        df["target"] = (df["roi"] > 0).astype(int)
-        print(f"  Target: high_roi (ROI > 0 = profitable)")
-        print(f"  Class distribution: {df['target'].value_counts().to_dict()}")
-        logger.info("Target: high_roi, distribution=%s", df['target'].value_counts().to_dict())
-
-    else:
-        raise ValueError(f"Unknown target_type: {target_type}. "
-                         f"Use 'high_conversion', 'revenue', or 'high_roi'.")
-
-    return df
+    leaked = set(X.columns) & set(LEAKAGE_COLUMNS)
+    assert not leaked, f"Leakage columns in features: {leaked}"
+    return X[FEATURE_COLUMNS]
 
 
-# =====================================================================
-# 2. DERIVED FEATURES
-# =====================================================================
+def target_to_revenue(y_log) -> np.ndarray:
+    """Invert the log1p target transform, clipping at 0."""
+    return np.clip(np.expm1(np.asarray(y_log, dtype=float)), 0, None)
 
-def create_derived_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Create derived KPI features from raw advertising metrics.
-
-    New columns (added only if not already present):
-        - ctr, cpc, cpm, conversion_rate
-        - cost_per_conversion, revenue_per_click
-        - bounce_click_ratio, impression_conversion_rate
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Cleaned DataFrame with raw metrics.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame with new derived columns.
-    """
-    df = df.copy()
-    count = 0
-
-    if "ctr" not in df.columns:
-        df["ctr"] = np.where(df["impressions"] > 0,
-                             df["clicks"] / df["impressions"], 0).round(6)
-        count += 1
-
-    if "cpc" not in df.columns:
-        df["cpc"] = np.where(df["clicks"] > 0,
-                             df["spend"] / df["clicks"], 0).round(4)
-        count += 1
-
-    if "cpm" not in df.columns:
-        df["cpm"] = np.where(df["impressions"] > 0,
-                             (df["spend"] / df["impressions"]) * 1000, 0).round(4)
-        count += 1
-
-    if "conversion_rate" not in df.columns:
-        df["conversion_rate"] = np.where(df["clicks"] > 0,
-                                         df["conversions"] / df["clicks"], 0).round(6)
-        count += 1
-
-    if "cost_per_conversion" not in df.columns:
-        df["cost_per_conversion"] = np.where(
-            df["conversions"] > 0, df["spend"] / df["conversions"], 0
-        ).round(4)
-        count += 1
-
-    if "revenue_per_click" not in df.columns and "revenue" in df.columns:
-        df["revenue_per_click"] = np.where(
-            df["clicks"] > 0, df["revenue"] / df["clicks"], 0
-        ).round(4)
-        count += 1
-
-    if "bounce_rate" in df.columns and "clicks" in df.columns:
-        df["bounce_click_ratio"] = (df["bounce_rate"] * np.log1p(df["clicks"])).round(4)
-        count += 1
-
-    df["impression_conversion_rate"] = np.where(
-        df["impressions"] > 0, df["conversions"] / df["impressions"], 0
-    ).round(8)
-    count += 1
-
-    print(f"  Created {count} derived features")
-    logger.info("Created %d derived features", count)
-    return df
-
-
-# =====================================================================
-# 3. INTERACTION FEATURES
-# =====================================================================
-
-def create_interaction_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Create categorical interaction features.
-
-    New columns: campaign_channel, channel_device, campaign_device
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame with categorical columns.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame with interaction columns.
-    """
-    df = df.copy()
-    count = 0
-
-    if "campaign" in df.columns and "channel" in df.columns:
-        df["campaign_channel"] = df["campaign"] + "_" + df["channel"]
-        count += 1
-
-    if "channel" in df.columns and "device" in df.columns:
-        df["channel_device"] = df["channel"] + "_" + df["device"]
-        count += 1
-
-    if "campaign" in df.columns and "device" in df.columns:
-        df["campaign_device"] = df["campaign"] + "_" + df["device"]
-        count += 1
-
-    print(f"  Created {count} interaction features")
-    logger.info("Created %d interaction features", count)
-    return df
-
-
-# =====================================================================
-# 4. TIME-BASED FEATURES
-# =====================================================================
-
-def create_time_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Extract temporal features from the date column.
-
-    New columns: day, month, weekday, is_weekend, day_of_year, week_of_year
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame with a 'date' column.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame with time-based features.
-    """
-    df = df.copy()
-
-    if "date" not in df.columns:
-        print("  [SKIP] No 'date' column found")
-        return df
-
-    dt = pd.to_datetime(df["date"])
-
-    df["day"] = dt.dt.day
-    df["month"] = dt.dt.month
-    df["weekday"] = dt.dt.weekday
-    df["is_weekend"] = (dt.dt.weekday >= 5).astype(int)
-    df["day_of_year"] = dt.dt.dayofyear
-    df["week_of_year"] = dt.dt.isocalendar().week.astype(int)
-
-    print(f"  Created 6 time-based features")
-    return df
-
-
-# =====================================================================
-# MAIN PIPELINE
-# =====================================================================
 
 def prepare_features(
     df: pd.DataFrame,
-    target_type: str = "high_roi",
-    test_size: float = 0.2,
-    random_state: int = 42,
+    test_start: pd.Timestamp = DEFAULT_TEST_START,
 ) -> dict:
     """
-    Feature preparation pipeline (encoding/scaling deferred to sklearn Pipeline).
-
-    Steps:
-        1. Create target variable
-        2. Create derived features (KPIs)
-        3. Create interaction features
-        4. Create time-based features
-        5. Drop leakage and identifier columns
-        6. Identify column types for Pipeline preprocessing
-        7. Train/test split (on raw features — no leakage)
+    Build features and a time-based train/test split.
 
     Parameters
     ----------
     df : pd.DataFrame
-        Cleaned DataFrame with KPIs computed.
-    target_type : str
-        Target variable type.
-    test_size : float
-        Fraction of data for testing.
-    random_state : int
-        Random seed for reproducibility.
+        Cleaned DataFrame with KPI columns (needs firm_margin).
+    test_start : pd.Timestamp
+        First day of the test period; everything earlier is training.
 
     Returns
     -------
     dict
-        - X_train, X_test, y_train, y_test: raw (unscaled) split data
-        - numeric_features, categorical_features: column lists for Pipeline
-        - task_type, target_type: metadata
-        - feature_count: total features
+        - X_train, X_test: raw (unencoded) features, sorted by date
+        - y_train, y_test: log1p(revenue)
+        - eval_train, eval_test: date/displays/cost/revenue/margin for
+          baselines and business evaluation
+        - numeric_features, categorical_features, feature_names
+        - task_type ("regression"), target_type, time_ordered (True)
+        - test_start, feature_count
     """
     print("\n" + "=" * 60)
-    print("ADVANCED FEATURE ENGINEERING")
+    print("FEATURE ENGINEERING")
     print("=" * 60)
 
-    # Step 1: Create target
-    print("\n[1/7] Creating target variable...")
-    df = create_target(df, target_type)
+    df = df.sort_values("date", kind="stable").reset_index(drop=True)
 
-    # Step 2: Derived features
-    print("\n[2/7] Creating derived features...")
-    df = create_derived_features(df)
+    print("\n[1/3] Building pre-delivery features...")
+    X = build_features(df)
+    y = np.log1p(df["revenue"].astype(float))
+    print(f"  Categorical ({len(CATEGORICAL_FEATURES)}): {', '.join(CATEGORICAL_FEATURES)}")
+    print(f"  Numeric ({len(NUMERIC_FEATURES)}): {', '.join(NUMERIC_FEATURES)}")
+    print(f"  Excluded as leakage ({len(LEAKAGE_COLUMNS)}): {', '.join(LEAKAGE_COLUMNS)}")
 
-    # Step 3: Interaction features
-    print("\n[3/7] Creating interaction features...")
-    df = create_interaction_features(df)
+    print("\n[2/3] Target: log1p(revenue)")
+    print(f"  Revenue skewness {df['revenue'].skew():.1f} -> log target skewness {y.skew():.1f}")
 
-    # Step 4: Time-based features
-    print("\n[4/7] Extracting time-based features...")
-    df = create_time_features(df)
+    print(f"\n[3/3] Time-based split at {test_start.date()}...")
+    train_mask = df["date"] < test_start
+    if train_mask.all() or not train_mask.any():
+        raise ValueError(f"test_start {test_start.date()} leaves an empty train or test set")
 
-    # Step 5: Drop leakage & identifier columns
-    print("\n[5/7] Removing leakage & identifier columns...")
-    leakage_cols = LEAKAGE_MAP.get(target_type, [])
-    drop_cols = list(set(DROP_ALWAYS + leakage_cols + ["target"]))
-    available_drop = [c for c in drop_cols if c in df.columns]
-    feature_cols = [c for c in df.columns if c not in drop_cols]
-
-    print(f"  Dropped ({len(available_drop)}): {', '.join(sorted(available_drop))}")
-
-    X = df[feature_cols].copy()
-    y = df["target"].copy()
-
-    # Step 6: Identify column types for the sklearn Pipeline
-    print("\n[6/7] Identifying column types for Pipeline...")
-    numeric_features = X.select_dtypes(include=["int64", "float64", "int32"]).columns.tolist()
-    categorical_features = X.select_dtypes(include=["object", "category"]).columns.tolist()
-
-    print(f"  Numeric ({len(numeric_features)}): {', '.join(numeric_features)}")
-    print(f"  Categorical ({len(categorical_features)}): {', '.join(categorical_features)}")
-
-    # Step 7: Train/test split (BEFORE encoding/scaling to prevent leakage)
-    print(f"\n[7/7] Splitting data ({int((1-test_size)*100)}/{int(test_size*100)} "
-          f"train/test, seed={random_state})...")
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state,
-        stratify=y if target_type != "revenue" else None,
-    )
-
-    task_type = "regression" if target_type == "revenue" else "classification"
-    print(f"  Train: {len(X_train)} | Test: {len(X_test)} | Features: {len(feature_cols)}")
-    print(f"  Task type: {task_type}")
+    split = {
+        "X_train": X[train_mask], "X_test": X[~train_mask],
+        "y_train": y[train_mask], "y_test": y[~train_mask],
+        "eval_train": df.loc[train_mask, EVAL_COLUMNS],
+        "eval_test": df.loc[~train_mask, EVAL_COLUMNS],
+    }
+    print(f"  Train: {len(split['X_train']):,} rows "
+          f"({df.loc[train_mask, 'date'].min().date()} to {df.loc[train_mask, 'date'].max().date()})")
+    print(f"  Test:  {len(split['X_test']):,} rows "
+          f"({df.loc[~train_mask, 'date'].min().date()} to {df.loc[~train_mask, 'date'].max().date()})")
     print("=" * 60)
-    logger.info("Feature prep complete: %d train, %d test, %d features, task=%s",
-                len(X_train), len(X_test), len(feature_cols), task_type)
+
+    logger.info("Feature prep complete: %d train, %d test, %d features",
+                len(split["X_train"]), len(split["X_test"]), len(FEATURE_COLUMNS))
 
     return {
-        "X_train": X_train,
-        "X_test": X_test,
-        "y_train": y_train,
-        "y_test": y_test,
-        "numeric_features": numeric_features,
-        "categorical_features": categorical_features,
-        "feature_names": feature_cols,
-        "task_type": task_type,
-        "target_type": target_type,
-        "feature_count": len(feature_cols),
+        **split,
+        "numeric_features": NUMERIC_FEATURES,
+        "categorical_features": CATEGORICAL_FEATURES,
+        "feature_names": FEATURE_COLUMNS,
+        "task_type": "regression",
+        "target_type": TARGET_TYPE,
+        "time_ordered": True,
+        "test_start": str(test_start.date()),
+        "feature_count": len(FEATURE_COLUMNS),
     }

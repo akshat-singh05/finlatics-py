@@ -74,7 +74,7 @@ def explain_model(
         - top_negative: features with highest negative impact
     """
     output_dir = Path(output_dir)
-    output_dir.mkdir(exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     print("\n" + "=" * 60)
     print(f"MODEL EXPLAINABILITY (SHAP) - {model_name}")
@@ -146,6 +146,10 @@ def _compute_shap_values(model, X_train_df, X_test_df, task_type):
     # Use TreeExplainer for tree-based models (fast and exact)
     if hasattr(model, "estimators_") or "Boosting" in model_type or "Forest" in model_type:
         explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_test_df)
+    elif hasattr(model, "coef_") and task_type == "regression":
+        # Linear models: exact and fast (KernelExplainer would take hours)
+        explainer = shap.LinearExplainer(model, X_train_df)
         shap_values = explainer.shap_values(X_test_df)
     else:
         # Use KernelExplainer for linear / other models (sample background)

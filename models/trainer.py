@@ -13,6 +13,7 @@ Models:
     Regression: Ridge, Random Forest, Gradient Boosting
 """
 
+import os
 import json
 import time
 import warnings
@@ -29,7 +30,7 @@ from sklearn.ensemble import (
     GradientBoostingClassifier, GradientBoostingRegressor,
 )
 
-from sklearn.model_selection import RandomizedSearchCV, cross_val_score
+from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit, cross_val_score
 from scipy.stats import randint, uniform, loguniform
 
 from utils.logger import get_logger
@@ -37,6 +38,9 @@ from utils.logger import get_logger
 logger = get_logger("trainer")
 
 warnings.filterwarnings("ignore", category=UserWarning)
+
+# Parallel workers for search/CV; lower it (e.g. N_JOBS=2) on low-memory machines
+N_JOBS = int(os.environ.get("N_JOBS", "-1"))
 
 
 # =====================================================================
@@ -103,7 +107,7 @@ def _get_classification_configs():
             "n_iter": 20,
         },
         "Random Forest": {
-            "model": RandomForestClassifier(random_state=42, n_jobs=-1),
+            "model": RandomForestClassifier(random_state=42, n_jobs=N_JOBS),
             "params": {
                 "model__n_estimators": randint(100, 500),
                 "model__max_depth": [5, 8, 12, 15, None],
@@ -140,12 +144,14 @@ def _get_regression_configs():
             "n_iter": 20,
         },
         "Random Forest": {
-            "model": RandomForestRegressor(random_state=42, n_jobs=-1),
+            # Bounded depth/size: unbounded forests overfit ~12k rows and need
+            # hundreds of MB; these bounds keep training feasible on 8 GB machines
+            "model": RandomForestRegressor(random_state=42, n_jobs=N_JOBS),
             "params": {
-                "model__n_estimators": randint(100, 500),
-                "model__max_depth": [5, 8, 12, 15, None],
+                "model__n_estimators": randint(100, 250),
+                "model__max_depth": [6, 10, 14, 18],
                 "model__min_samples_split": randint(2, 20),
-                "model__min_samples_leaf": randint(1, 10),
+                "model__min_samples_leaf": randint(2, 10),
                 "model__max_features": ["sqrt", "log2", None],
             },
             "n_iter": 30,
@@ -175,7 +181,11 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
 
     Each model is wrapped in:
         Pipeline([preprocessor, model])
-            -> RandomizedSearchCV(pipeline, param_grid, cv=cv_folds)
+            -> RandomizedSearchCV(pipeline, param_grid, cv=splitter)
+
+    If ``prepared_data["time_ordered"]`` is True (rows sorted by date), the
+    folds are TimeSeriesSplit: every validation fold lies after its
+    training folds, mirroring the held-out test period.
 
     Parameters
     ----------
@@ -219,7 +229,13 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
 
     print("\n" + "=" * 60)
     print(f"MODEL TRAINING WITH HYPERPARAMETER TUNING ({task_type.upper()})")
-    print(f"  Strategy: RandomizedSearchCV | CV folds: {cv_folds} | Scoring: {scoring}")
+    if prepared_data.get("time_ordered"):
+        splitter = TimeSeriesSplit(n_splits=cv_folds)
+        cv_label = f"{cv_folds}-fold time-series CV"
+    else:
+        splitter = cv_folds
+        cv_label = f"{cv_folds}-fold CV"
+    print(f"  Strategy: RandomizedSearchCV | {cv_label} | Scoring: {scoring}")
     print("=" * 60)
 
     for name, config in configs.items():
@@ -238,10 +254,10 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
             estimator=pipeline,
             param_distributions=config["params"],
             n_iter=config["n_iter"],
-            cv=cv_folds,
+            cv=splitter,
             scoring=scoring,
             random_state=42,
-            n_jobs=-1,
+            n_jobs=N_JOBS,
             return_train_score=True,
             error_score="raise",
         )
@@ -255,7 +271,7 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
 
         # Cross-validation scores on training data with best model
         cv_scores = cross_val_score(
-            best_pipeline, X_train, y_train, cv=cv_folds, scoring=scoring
+            best_pipeline, X_train, y_train, cv=splitter, scoring=scoring, n_jobs=N_JOBS
         )
 
         # Extract best params (clean names)
@@ -273,6 +289,7 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
             "cv_std": round(cv_scores.std(), 4),
             "predictions": predictions,
             "train_time": round(train_time, 2),
+            "cv_label": cv_label,
         }
 
         # Get probabilities for classification

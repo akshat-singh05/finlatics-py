@@ -3,32 +3,35 @@
 Finlatics-Py: Online Advertising Performance Analysis & ML Pipeline
 
 End-to-end data science pipeline that loads, cleans, analyzes,
-visualizes, and builds predictive models on advertising performance data.
+visualizes, and builds a predictive model on advertising performance data.
 
 Data:
     Reads data/raw/online_advertising_performance_data.csv (never modified)
     and writes the cleaned, KPI-enriched table to data/processed/.
 
-Migration status:
-    Load -> clean -> KPIs -> EDA charts -> insights run on the real Finlatics
-    dataset. ML is skipped until migrated (ML_STAGES_MIGRATED).
+ML task:
+    Predict revenue (log1p) for a planned inventory buy from pre-delivery
+    features, then derive margin and profitability. Time-based split; see
+    models/feature_engineering.py.
 
 Usage:
-    python main.py                          # Full pipeline (analysis + ML)
-    python main.py --target high_roi        # ML with ROI classification
-    python main.py --target revenue         # ML with revenue regression
-    python main.py --target high_conversion # ML with conversion classification
-    python main.py --no-ml                  # Analysis only, skip ML
+    python main.py                            # Full pipeline (analysis + ML)
+    python main.py --no-ml                    # Analysis only, skip ML
+    python main.py --test-start 2020-06-01    # Change the held-out period
+    N_JOBS=2 python main.py                   # Fewer workers on low-memory machines
 
 Outputs:
-    - Console: data inspection, cleaning report, KPI summary, model comparison
-    - reports/figures/: 12 EDA charts (PNG); reports/eda_findings.json
+    - reports/figures/: 12 EDA charts; reports/eda_findings.json
+    - reports/figures/ml/: model vs baselines; reports/model_evaluation.json
+    - output/ml/: CV, feature importance, SHAP and residual charts
+    - models/saved/revenue_model.joblib (+ .meta.json)
 """
 
 import sys
 import time
 import argparse
 import joblib
+import pandas as pd
 from pathlib import Path
 
 # Add project root to path
@@ -45,10 +48,9 @@ from analysis.insights import generate_insights
 logger = get_logger("pipeline")
 
 PROCESSED_PATH = PROJECT_ROOT / "data" / "processed" / "advertising_clean.csv"
-
-# The ML stages still expect the old synthetic schema
-# (channel/device/impressions/...). Flip this once they are migrated.
-ML_STAGES_MIGRATED = False
+REPORTS_DIR = PROJECT_ROOT / "reports"
+ML_OUTPUT_DIR = PROJECT_ROOT / "output" / "ml"
+MODEL_PATH = PROJECT_ROOT / "models" / "saved" / "revenue_model.joblib"
 
 SUMMARY_DIMENSIONS = ["campaign_number", "user_engagement", "banner", "placement"]
 
@@ -59,49 +61,27 @@ def parse_args():
         description="Finlatics-Py: Advertising Performance Analysis & ML Pipeline"
     )
     parser.add_argument(
-        "--target", type=str, default="high_roi",
-        choices=["high_roi", "high_conversion", "revenue"],
-        help="ML target variable (default: high_roi)"
-    )
-    parser.add_argument(
         "--no-ml", action="store_true",
         help="Skip machine learning, run analysis only"
     )
     parser.add_argument(
-        "--test-size", type=float, default=0.2,
-        help="Test set fraction (default: 0.2)"
+        "--test-start", type=str, default="2020-06-10",
+        help="First day of the held-out test period (default: 2020-06-10)"
+    )
+    parser.add_argument(
+        "--cv-folds", type=int, default=5,
+        help="Number of time-series CV folds (default: 5)"
     )
     return parser.parse_args()
 
 
-def main():
-    """Run the full analysis and ML pipeline."""
-    args = parse_args()
-    data_path = DEFAULT_RAW_PATH
-    output_dir = PROJECT_ROOT / "output"
-    eda_dir = PROJECT_ROOT / "reports" / "figures"
-
-    run_ml = not args.no_ml and ML_STAGES_MIGRATED
-    total_steps = 11 if run_ml else 6
-    pipeline_start = time.time()
-
-    print("=" * 60)
-    print("  FINLATICS-PY: Advertising Performance Analysis")
-    if run_ml:
-        print(f"  ML Target: {args.target}")
-    print("=" * 60)
-
-    logger.info("Pipeline started | ML=%s | target=%s", not args.no_ml, args.target)
-
-    # ==================================================================
-    # PHASE 1: DATA ANALYSIS
-    # ==================================================================
-
+def run_analysis(total_steps: int) -> pd.DataFrame | None:
+    """Steps 1-6: load, inspect, clean, KPIs, EDA charts, insights."""
     # Step 1: Load Data
     print(f"\n[STEP 1/{total_steps}] Loading data...")
     try:
-        df = load_data(data_path)
-        logger.info("Data loaded: %d rows from %s", len(df), data_path.name)
+        df = load_data(DEFAULT_RAW_PATH)
+        logger.info("Data loaded: %d rows from %s", len(df), DEFAULT_RAW_PATH.name)
     except FileNotFoundError as e:
         logger.error("Data file not found: %s", e)
         print(f"\n[ERROR] {e}")
@@ -140,119 +120,129 @@ def main():
     logger.info("Processed dataset saved: %s", PROCESSED_PATH)
 
     # Step 5: Generate Visualizations
-    print(f"\n[STEP 5/{total_steps}] Generating EDA charts to {eda_dir}/...")
-    saved_charts = generate_all_charts(df, eda_dir)
-    print(f"\nSaved {len(saved_charts)} charts to {eda_dir}/")
+    fig_dir = REPORTS_DIR / "figures"
+    print(f"\n[STEP 5/{total_steps}] Generating EDA charts to {fig_dir}/...")
+    saved_charts = generate_all_charts(df, fig_dir)
+    print(f"\nSaved {len(saved_charts)} charts to {fig_dir}/")
     logger.info("Generated %d analysis charts", len(saved_charts))
 
     # Step 6: Business Insights
     print(f"\n[STEP 6/{total_steps}] Generating business insights...")
-    insights = generate_insights(df, PROJECT_ROOT / "reports")
+    generate_insights(df, REPORTS_DIR)
 
-    # ==================================================================
-    # PHASE 2: MACHINE LEARNING
-    # ==================================================================
+    return df
 
-    if not args.no_ml and not ML_STAGES_MIGRATED:
-        print("\n  [SKIP] ML stages are not yet migrated to the real dataset schema.")
 
-    if run_ml:
+def run_ml(df: pd.DataFrame, args, total_steps: int) -> str | None:
+    """Steps 7-11: features, training, evaluation, SHAP, diagnostics."""
+    # Imported here so `--no-ml` works without scikit-learn/SHAP installed
+    try:
         from models.feature_engineering import prepare_features
         from models.trainer import train_all_models, save_training_metadata
         from models.evaluator import evaluate_all_models
+        from models.business_evaluation import evaluate_against_baselines
         from models.explainability import explain_model
         from models.ml_visualizations import generate_ml_diagnostics
+    except ImportError as e:
+        logger.error("ML dependencies unavailable: %s", e)
+        print(f"\n[ERROR] ML dependencies could not be loaded: {e}\n"
+              "        Install requirements.txt, use the Dockerfile, or run with --no-ml.")
+        return None
 
-        # Step 7: Feature Engineering
-        print(f"\n[STEP 7/{total_steps}] Preparing features for ML...")
-        try:
-            prepared_data = prepare_features(
-                df, target_type=args.target, test_size=args.test_size
-            )
-            logger.info("Features prepared: %d features, %d train / %d test",
-                         prepared_data["feature_count"],
-                         len(prepared_data["X_train"]),
-                         len(prepared_data["X_test"]))
-        except Exception as e:
-            logger.error("Feature engineering failed: %s", e)
-            print(f"\n[ERROR] Feature engineering failed: {e}")
-            return df
+    # Step 7: Feature Engineering
+    print(f"\n[STEP 7/{total_steps}] Preparing features for ML...")
+    try:
+        prepared_data = prepare_features(df, test_start=pd.Timestamp(args.test_start))
+    except Exception as e:
+        logger.error("Feature engineering failed: %s", e)
+        print(f"\n[ERROR] Feature engineering failed: {e}")
+        return None
 
-        # Step 8: Train Models
-        print(f"\n[STEP 8/{total_steps}] Training models...")
-        try:
-            trained_models = train_all_models(prepared_data)
-            logger.info("Trained %d models", len(trained_models))
-        except Exception as e:
-            logger.error("Model training failed: %s", e)
-            print(f"\n[ERROR] Model training failed: {e}")
-            return df
+    # Step 8: Train Models
+    print(f"\n[STEP 8/{total_steps}] Training models...")
+    try:
+        trained_models = train_all_models(prepared_data, cv_folds=args.cv_folds)
+        logger.info("Trained %d models", len(trained_models))
+    except Exception as e:
+        logger.error("Model training failed: %s", e)
+        print(f"\n[ERROR] Model training failed: {e}")
+        return None
 
-        # Step 9: Evaluate & Compare Models
-        print(f"\n[STEP 9/{total_steps}] Evaluating models...")
-        comparison, best_model_name = evaluate_all_models(
-            trained_models, prepared_data, output_dir
+    # Step 9: Evaluate (model selection by CV) & compare with baselines
+    print(f"\n[STEP 9/{total_steps}] Evaluating models...")
+    comparison, best_model_name = evaluate_all_models(
+        trained_models, prepared_data, ML_OUTPUT_DIR
+    )
+    best_pipeline = trained_models[best_model_name]["pipeline"]
+    evaluate_against_baselines(best_pipeline, best_model_name, prepared_data, REPORTS_DIR)
+
+    # Save the best pipeline (preprocessor + model) and its metadata
+    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(best_pipeline, MODEL_PATH)
+    meta_path = save_training_metadata(MODEL_PATH, best_model_name, comparison, prepared_data)
+    print(f"\n  Best pipeline saved: {MODEL_PATH}")
+    logger.info("Best pipeline saved: %s (%s), metadata: %s",
+                MODEL_PATH.name, best_model_name, meta_path)
+
+    # Step 10: Model Explainability (SHAP)
+    print(f"\n[STEP 10/{total_steps}] Explaining best model with SHAP...")
+    try:
+        explain_model(
+            pipeline=best_pipeline,
+            X_train=prepared_data["X_train"],
+            X_test=prepared_data["X_test"],
+            feature_names=prepared_data["feature_names"],
+            model_name=best_model_name,
+            task_type=prepared_data["task_type"],
+            output_dir=ML_OUTPUT_DIR,
         )
+        logger.info("SHAP explainability completed for %s", best_model_name)
+    except Exception as e:
+        logger.warning("SHAP explainability failed (non-critical): %s", e)
+        print(f"\n  [WARN] SHAP failed: {e}")
 
-        # Save the best pipeline (preprocessor + model)
-        model_dir = PROJECT_ROOT / "models" / "saved"
-        model_dir.mkdir(parents=True, exist_ok=True)
-        model_path = model_dir / f"best_pipeline_{args.target}.joblib"
-        joblib.dump(trained_models[best_model_name]["pipeline"], model_path)
-        print(f"\n  Best pipeline saved: {model_path}")
-        logger.info("Best pipeline saved: %s (%s)", model_path.name, best_model_name)
+    # Step 11: ML Diagnostic Visualizations
+    print(f"\n[STEP 11/{total_steps}] Generating ML diagnostic charts...")
+    try:
+        generate_ml_diagnostics(trained_models, prepared_data, ML_OUTPUT_DIR, best_model_name)
+    except Exception as e:
+        logger.warning("ML diagnostics failed (non-critical): %s", e)
+        print(f"\n  [WARN] ML diagnostics failed: {e}")
 
-        # Save training metadata
-        meta_path = save_training_metadata(
-            model_path, best_model_name, comparison, prepared_data
-        )
-        logger.info("Training metadata saved: %s", meta_path)
+    return best_model_name
 
-        # Step 10: Model Explainability (SHAP)
-        print(f"\n[STEP 10/{total_steps}] Explaining best model with SHAP...")
-        try:
-            explain_results = explain_model(
-                pipeline=trained_models[best_model_name]["pipeline"],
-                X_train=prepared_data["X_train"],
-                X_test=prepared_data["X_test"],
-                feature_names=prepared_data["feature_names"],
-                model_name=best_model_name,
-                task_type=prepared_data["task_type"],
-                output_dir=output_dir,
-            )
-            logger.info("SHAP explainability completed for %s", best_model_name)
-        except Exception as e:
-            logger.warning("SHAP explainability failed (non-critical): %s", e)
-            print(f"\n  [WARN] SHAP failed: {e}")
 
-        # Step 11: ML Diagnostic Visualizations
-        print(f"\n[STEP 11/{total_steps}] Generating ML diagnostic charts...")
-        try:
-            generate_ml_diagnostics(trained_models, prepared_data, output_dir)
-        except Exception as e:
-            logger.warning("ML diagnostics failed (non-critical): %s", e)
-            print(f"\n  [WARN] ML diagnostics failed: {e}")
+def main():
+    """Run the full analysis and ML pipeline."""
+    args = parse_args()
+    total_steps = 6 if args.no_ml else 11
+    pipeline_start = time.time()
 
-    # ==================================================================
-    # DONE
-    # ==================================================================
+    print("=" * 60)
+    print("  FINLATICS-PY: Advertising Performance Analysis")
+    print("=" * 60)
+    logger.info("Pipeline started | ML=%s", not args.no_ml)
+
+    df = run_analysis(total_steps)
+    if df is None:
+        return None
+
+    best_model_name = None if args.no_ml else run_ml(df, args, total_steps)
+
     elapsed = time.time() - pipeline_start
     print("\n" + "=" * 60)
     print("  PIPELINE COMPLETE")
     print("=" * 60)
     print(f"  Records analyzed: {len(df):,}")
-    print(f"  Charts generated: {len(saved_charts)}")
-    if run_ml:
-        print(f"  ML target:        {args.target}")
+    if best_model_name:
         print(f"  Best model:       {best_model_name}")
-        print(f"  Model saved to:   {model_path}")
-    print(f"  Output directory:  {output_dir}")
-    print(f"  Total time:        {elapsed:.1f}s")
+        print(f"  Model saved to:   {MODEL_PATH}")
+    print(f"  Reports:          {REPORTS_DIR}")
+    print(f"  Total time:       {elapsed:.1f}s")
     print("=" * 60)
 
-    logger.info("Pipeline complete in %.1fs | %d records | %d charts",
-                elapsed, len(df), len(saved_charts))
-
+    logger.info("Pipeline complete in %.1fs | %d records | model=%s",
+                elapsed, len(df), best_model_name)
     return df
 
 

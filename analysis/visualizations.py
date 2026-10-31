@@ -35,7 +35,7 @@ PRIMARY = CATEGORICAL[0]
 WEEKDAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday",
                  "Friday", "Saturday", "Sunday"]
 
-def _fmt_money(x: float) -> str:
+def fmt_money(x: float) -> str:
     """$1,234 / −$1,234; values under a dollar shown as <$1."""
     if abs(x) < 0.5:
         return "<$1" if x > 0 else ("−<$1" if x < 0 else "$0")
@@ -50,12 +50,12 @@ def _fmt_compact(x: float) -> str:
     return f"{x:g}"
 
 
-_money = mticker.FuncFormatter(lambda x, _: _fmt_money(x))
+_money = mticker.FuncFormatter(lambda x, _: fmt_money(x))
 _pct = mticker.PercentFormatter(1.0, decimals=2)
 _compact = mticker.FuncFormatter(lambda x, _: _fmt_compact(x))
 
 
-def _setup_style():
+def setup_style():
     """Apply a clean, recessive chart style."""
     plt.rcParams.update({
         "figure.facecolor": INK["surface"],
@@ -125,7 +125,7 @@ def generate_all_charts(df: pd.DataFrame, output_dir: str | Path = "reports/figu
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    _setup_style()
+    setup_style()
 
     saved = []
     chart_funcs = [
@@ -335,13 +335,13 @@ def _chart_banner_placement_margin(df: pd.DataFrame, filepath: Path):
             if np.isnan(v):
                 continue
             strong = abs(signed_log.iat[i, j]) > lim * 0.6
-            ax.text(j, i, _fmt_money(v), ha="center", va="center", fontsize=8,
+            ax.text(j, i, fmt_money(v), ha="center", va="center", fontsize=8,
                     color="white" if strong else INK["primary"])
     cbar = fig.colorbar(im, ax=ax, shrink=0.8)
     ticks = np.array([-1e4, -1e3, -1e2, 0, 1e2, 1e3, 1e4])
     ticks = ticks[np.abs(ticks) <= limit]
     cbar.set_ticks(np.sign(ticks) * np.log10(1 + np.abs(ticks)))
-    cbar.set_ticklabels([_fmt_money(t) for t in ticks])
+    cbar.set_ticklabels([fmt_money(t) for t in ticks])
     cbar.set_label("Firm margin (log-compressed)")
     ax.set_xlabel("Placement")
     ax.set_ylabel("Banner")

@@ -68,7 +68,7 @@ def evaluate_all_models(
     y_test = prepared_data["y_test"]
     feature_names = prepared_data["feature_names"]
     output_dir = Path(output_dir)
-    output_dir.mkdir(exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     print("\n" + "=" * 60)
     print(f"MODEL EVALUATION ({task_type.upper()})")
@@ -83,12 +83,16 @@ def evaluate_all_models(
     print("\n--- Model Comparison ---")
     print(comparison.to_string(index=True))
 
-    # Identify best model
+    if task_type == "regression":
+        print("  (regression metrics are on the model's target scale)")
+
+    # Identify best model by cross-validation score: choosing by test score
+    # would tune the selection to the test set and overstate performance
     best_metric = "f1_score" if task_type == "classification" else "r2_score"
-    best_model_name = comparison[best_metric].idxmax()
+    best_model_name = comparison["cv_mean"].idxmax()
     best_score = comparison.loc[best_model_name, best_metric]
     cv_mean = comparison.loc[best_model_name, "cv_mean"]
-    print(f"\n  >> Best model: {best_model_name}")
+    print(f"\n  >> Best model (by CV mean): {best_model_name}")
     print(f"     Test {best_metric}: {best_score:.4f} | CV mean: {cv_mean:.4f}")
 
     # Print best params for each model
@@ -242,7 +246,8 @@ def _plot_cv_scores(trained_models: dict, task_type: str, output_dir: Path):
 
     metric_name = "F1 Score" if task_type == "classification" else "R2 Score"
     ax.set_ylabel(f"CV {metric_name}")
-    ax.set_title(f"Cross-Validation Score Distribution ({5}-Fold)",
+    cv_label = trained_models[names[0]].get("cv_label", f"{len(cv_data[0])}-fold CV")
+    ax.set_title(f"Cross-Validation Score Distribution ({cv_label})",
                  fontsize=14, fontweight="bold", pad=15)
 
     # Add mean annotations
