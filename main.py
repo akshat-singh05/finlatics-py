@@ -10,8 +10,8 @@ Data:
     and writes the cleaned, KPI-enriched table to data/processed/.
 
 Migration status:
-    Load -> clean -> KPIs run on the real Finlatics dataset. Charts,
-    insights and ML are skipped until migrated (DOWNSTREAM_STAGES_MIGRATED).
+    Load -> clean -> KPIs -> EDA charts -> insights run on the real Finlatics
+    dataset. ML is skipped until migrated (ML_STAGES_MIGRATED).
 
 Usage:
     python main.py                          # Full pipeline (analysis + ML)
@@ -22,7 +22,7 @@ Usage:
 
 Outputs:
     - Console: data inspection, cleaning report, KPI summary, model comparison
-    - output/: visualization charts + ML evaluation charts (PNG)
+    - reports/figures/: 12 EDA charts (PNG); reports/eda_findings.json
 """
 
 import sys
@@ -39,14 +39,16 @@ from utils.logger import get_logger
 from analysis.data_loader import DEFAULT_RAW_PATH, load_data, inspect_data
 from analysis.data_cleaning import clean_data
 from analysis.metrics import compute_kpis, summarize_by, get_overall_summary
+from analysis.visualizations import generate_all_charts
+from analysis.insights import generate_insights
 
 logger = get_logger("pipeline")
 
 PROCESSED_PATH = PROJECT_ROOT / "data" / "processed" / "advertising_clean.csv"
 
-# Charts, insights and ML still expect the old synthetic schema
+# The ML stages still expect the old synthetic schema
 # (channel/device/impressions/...). Flip this once they are migrated.
-DOWNSTREAM_STAGES_MIGRATED = False
+ML_STAGES_MIGRATED = False
 
 SUMMARY_DIMENSIONS = ["campaign_number", "user_engagement", "banner", "placement"]
 
@@ -77,16 +79,15 @@ def main():
     args = parse_args()
     data_path = DEFAULT_RAW_PATH
     output_dir = PROJECT_ROOT / "output"
+    eda_dir = PROJECT_ROOT / "reports" / "figures"
 
-    if not DOWNSTREAM_STAGES_MIGRATED:
-        total_steps = 4
-    else:
-        total_steps = 6 if args.no_ml else 11
+    run_ml = not args.no_ml and ML_STAGES_MIGRATED
+    total_steps = 11 if run_ml else 6
     pipeline_start = time.time()
 
     print("=" * 60)
     print("  FINLATICS-PY: Advertising Performance Analysis")
-    if not args.no_ml:
+    if run_ml:
         print(f"  ML Target: {args.target}")
     print("=" * 60)
 
@@ -138,40 +139,30 @@ def main():
     print(f"\n  Processed dataset saved: {PROCESSED_PATH}")
     logger.info("Processed dataset saved: %s", PROCESSED_PATH)
 
-    if not DOWNSTREAM_STAGES_MIGRATED:
-        print("\n" + "=" * 60)
-        print("  DATA PREPARATION COMPLETE")
-        print("=" * 60)
-        print(f"  Records analyzed: {len(df):,}")
-        print("  Charts, insights and ML are not yet migrated to the real")
-        print("  dataset schema; skipping them.")
-        print(f"  Total time:       {time.time() - pipeline_start:.1f}s")
-        print("=" * 60)
-        return df
-
-    from analysis.visualizations import generate_all_charts
-    from analysis.insights import generate_insights
-    from models.feature_engineering import prepare_features
-    from models.trainer import train_all_models, save_training_metadata
-    from models.evaluator import evaluate_all_models
-    from models.explainability import explain_model
-    from models.ml_visualizations import generate_ml_diagnostics
-
     # Step 5: Generate Visualizations
-    print(f"\n[STEP 5/{total_steps}] Generating visualizations to {output_dir}/...")
-    saved_charts = generate_all_charts(df, output_dir)
-    print(f"\nSaved {len(saved_charts)} charts to {output_dir}/")
+    print(f"\n[STEP 5/{total_steps}] Generating EDA charts to {eda_dir}/...")
+    saved_charts = generate_all_charts(df, eda_dir)
+    print(f"\nSaved {len(saved_charts)} charts to {eda_dir}/")
     logger.info("Generated %d analysis charts", len(saved_charts))
 
     # Step 6: Business Insights
     print(f"\n[STEP 6/{total_steps}] Generating business insights...")
-    insights = generate_insights(df, output_dir)
+    insights = generate_insights(df, PROJECT_ROOT / "reports")
 
     # ==================================================================
     # PHASE 2: MACHINE LEARNING
     # ==================================================================
 
-    if not args.no_ml:
+    if not args.no_ml and not ML_STAGES_MIGRATED:
+        print("\n  [SKIP] ML stages are not yet migrated to the real dataset schema.")
+
+    if run_ml:
+        from models.feature_engineering import prepare_features
+        from models.trainer import train_all_models, save_training_metadata
+        from models.evaluator import evaluate_all_models
+        from models.explainability import explain_model
+        from models.ml_visualizations import generate_ml_diagnostics
+
         # Step 7: Feature Engineering
         print(f"\n[STEP 7/{total_steps}] Preparing features for ML...")
         try:
@@ -251,7 +242,7 @@ def main():
     print("=" * 60)
     print(f"  Records analyzed: {len(df):,}")
     print(f"  Charts generated: {len(saved_charts)}")
-    if not args.no_ml:
+    if run_ml:
         print(f"  ML target:        {args.target}")
         print(f"  Best model:       {best_model_name}")
         print(f"  Model saved to:   {model_path}")

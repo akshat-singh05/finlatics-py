@@ -49,3 +49,6 @@ models/saved/
 # Generated data & logs
 data/processed/
 logs/
+
+# EDA figures are part of the written report
+!reports/figures/*.png

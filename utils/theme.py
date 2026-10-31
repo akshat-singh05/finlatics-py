@@ -21,5 +21,14 @@ COLORS = {
     "gold": "#D97706",
 }
 
+# EDA chart palette (validated for colour-vision deficiency, light surface).
+# Categorical slots are assigned in fixed order and capped at 3 series per
+# chart (campaigns and engagement levels both have exactly 3).
+CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a"]
+SEQUENTIAL_BLUE = ["#cde2fb", "#86b6ef", "#3987e5", "#256abf", "#184f95", "#0d366b"]
+DIVERGING = {"negative": "#e34948", "neutral": "#f0efec", "positive": "#2a78d6"}
+INK = {"primary": "#0b0b0b", "secondary": "#52514e", "muted": "#8a8984",
+       "grid": "#ecebe7", "surface": "#fcfcfb"}
+
 # Plotly template used by dashboard charts
 CHART_TEMPLATE = "plotly_dark"

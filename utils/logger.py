@@ -98,7 +98,9 @@ def _setup_root_logger():
     root = logging.getLogger("finlatics")
     root.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
 
-    root.addFilter(ContextFilter())
+    # Attached to the handlers, not the logger: logger-level filters do not
+    # run for records propagated from child loggers (finlatics.<name>).
+    context_filter = ContextFilter()
 
     if LOG_FORMAT_TYPE == "json":
         formatter = JSONFormatter()
@@ -116,11 +118,13 @@ def _setup_root_logger():
     )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
+    file_handler.addFilter(context_filter)
     root.addHandler(file_handler)
 
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
     console_handler.setFormatter(formatter)
+    console_handler.addFilter(context_filter)
     root.addHandler(console_handler)
 
 
