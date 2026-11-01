@@ -77,9 +77,9 @@ def fmt_money(x: float, decimals: int = 0) -> str:
     return f"{'−' if x < 0 else ''}${abs(x):,.{decimals}f}"
 
 
-def md_money(x: float) -> str:
+def md_money(x: float, decimals: int = 0) -> str:
     """Money for markdown text: Streamlit would render $...$ pairs as LaTeX."""
-    return fmt_money(x).replace("$", r"\$")
+    return fmt_money(x, decimals).replace("$", r"\$")
 
 
 def hbar(df: pd.DataFrame, category: str, value: str, title: str,
@@ -270,8 +270,11 @@ with tabs[3]:
 - **Concentration:** the top 1% of rows produce {dist['top_1pct_rows_revenue_share']:.0%} of revenue,
   the top 10% produce {dist['top_10pct_rows_revenue_share']:.0%}.
 - **Cost vs revenue:** Pearson r = {rel['pearson']:.2f}, Spearman ρ = {rel['spearman']:.2f}.
+- **Revenue per click:** {md_money(findings['revenue_per_click']['overall'], 3)} on average for Company X.
+- **Most consistent ROI:** {', '.join(findings['roi_consistency']['banners_profitable_every_month'])}
+  was the only banner profitable in every month.
 """)
-        st.caption("Full write-up with 12 charts: reports/eda_findings.md")
+        st.caption("Answers to all 20 official questions, with 19 charts: reports/eda_findings.md")
 
 
 # ---------- MODEL & PREDICT ----------

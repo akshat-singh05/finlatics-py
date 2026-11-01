@@ -150,3 +150,30 @@ def test_real_dataset_end_to_end():
     assert df["date"].nunique() == 91
     assert set(df["campaign_number"]) == {"camp 1", "camp 2", "camp 3"}
     assert df["banner"].nunique() == 8
+
+
+@pytest.mark.skipif(not DEFAULT_RAW_PATH.exists(), reason="raw dataset not present")
+def test_real_dataset_official_question_findings(tmp_path):
+    """Spot-check answers to the 20 official questions (reports/eda_findings.md)."""
+    from analysis.insights import generate_insights
+    from analysis.visualizations import generate_all_charts
+
+    df = compute_kpis(clean_data(load_data()))
+    f = generate_insights(df, tmp_path)
+
+    assert (tmp_path / "eda_findings.json").exists()
+    assert f["revenue_per_click"]["overall"] == pytest.approx(0.1108, abs=1e-4)          # Q5
+    assert f["revenue_per_click"]["by_campaign"]["camp 2"] == pytest.approx(0.0396, abs=1e-4)
+    assert f["sales_trend"]["camp1_sales_share"] == pytest.approx(0.948, abs=1e-3)      # Q7
+    assert f["engagement_by_banner"]["banners_where_medium_has_best_ctr"] == 8          # Q8
+    assert f["placement_conversions"]["lowest_conversion_rate"] == "def"                # Q9
+    assert f["outliers"]["clicks_but_zero_revenue_rows"] == 206                         # Q12
+    assert f["outliers"]["clicks"]["log_iqr_upper_outliers"] == 0
+    assert f["roi_consistency"]["weeks_as_top_banner_by_roi"] == {"240 x 400": 14}      # Q14
+    assert f["roi_consistency"]["banners_profitable_every_month"] == ["240 x 400"]
+    assert f["weekend_engagement"]["days"] == {"weekday": 65, "weekend": 26}            # Q16
+    cpa = f["cost_per_conversion"]["by_campaign"]                                       # Q18
+    assert min(cpa, key=cpa.get) == "camp 1"
+
+    saved = generate_all_charts(df, tmp_path / "figures")
+    assert len(saved) == 19
