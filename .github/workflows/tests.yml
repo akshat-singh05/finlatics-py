@@ -25,3 +25,17 @@ jobs:
       # trained model is not committed. Run `python main.py` locally for them.
       - name: Run tests
         run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t finlatics-py .
+
+      - name: Run analysis pipeline in container (no ML)
+        run: docker run --rm finlatics-py python main.py --no-ml
+
+      - name: Run tests in container
+        run: docker run --rm finlatics-py pytest -q

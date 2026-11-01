@@ -331,7 +331,7 @@ The suite has **41 tests** covering:
 - API validation, filters and predictions
 - a headless dashboard run (rendering, filtering, prediction form)
 
-Tests that need the trained model skip when it is absent. GitHub Actions runs the suite and `python main.py --no-ml` on every push.
+Tests that need the trained model skip when it is absent. On every push, GitHub Actions runs the suite and `python main.py --no-ml` twice: once directly, and once inside the Docker image (which it builds first).
 
 ## Limitations & future improvements
 
