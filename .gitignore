@@ -45,3 +45,14 @@ models/saved/
 
 # Environment variables
 .env
+
+# Generated data & logs
+data/processed/
+logs/
+
+# EDA figures are part of the written report
+!reports/figures/*.png
+!reports/figures/ml/*.png
+
+# Local editor/agent tooling
+.claude/

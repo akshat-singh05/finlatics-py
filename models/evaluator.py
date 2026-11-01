@@ -26,6 +26,9 @@ from sklearn.metrics import (
 )
 
 from models.trainer import get_feature_importance
+from utils.logger import get_logger
+
+logger = get_logger("evaluator")
 
 
 # Chart style
@@ -65,7 +68,7 @@ def evaluate_all_models(
     y_test = prepared_data["y_test"]
     feature_names = prepared_data["feature_names"]
     output_dir = Path(output_dir)
-    output_dir.mkdir(exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     print("\n" + "=" * 60)
     print(f"MODEL EVALUATION ({task_type.upper()})")
@@ -80,12 +83,16 @@ def evaluate_all_models(
     print("\n--- Model Comparison ---")
     print(comparison.to_string(index=True))
 
-    # Identify best model
+    if task_type == "regression":
+        print("  (regression metrics are on the model's target scale)")
+
+    # Identify best model by cross-validation score: choosing by test score
+    # would tune the selection to the test set and overstate performance
     best_metric = "f1_score" if task_type == "classification" else "r2_score"
-    best_model_name = comparison[best_metric].idxmax()
+    best_model_name = comparison["cv_mean"].idxmax()
     best_score = comparison.loc[best_model_name, best_metric]
     cv_mean = comparison.loc[best_model_name, "cv_mean"]
-    print(f"\n  >> Best model: {best_model_name}")
+    print(f"\n  >> Best model (by CV mean): {best_model_name}")
     print(f"     Test {best_metric}: {best_score:.4f} | CV mean: {cv_mean:.4f}")
 
     # Print best params for each model
@@ -105,7 +112,14 @@ def evaluate_all_models(
     if task_type == "classification":
         _plot_confusion_matrices(trained_models, y_test, output_dir)
 
+    # Export comparison table
+    csv_path = output_dir / "model_comparison.csv"
+    comparison.to_csv(csv_path)
+    logger.info("Model comparison saved to %s", csv_path.name)
+
     print("=" * 60)
+    logger.info("Best model: %s (%s=%.4f, CV=%.4f)",
+                best_model_name, best_metric, best_score, cv_mean)
 
     return comparison, best_model_name
 
@@ -175,11 +189,15 @@ def _plot_model_comparison(comparison: pd.DataFrame, task_type: str, output_dir:
     if task_type == "classification":
         metrics = ["accuracy", "f1_score", "cv_mean"]
         titles = ["Test Accuracy", "Test F1 Score", "CV Mean (F1)"]
+        if "roc_auc" in comparison.columns and comparison["roc_auc"].notna().all():
+            metrics.append("roc_auc")
+            titles.append("ROC AUC")
     else:
         metrics = ["r2_score", "rmse", "cv_mean"]
         titles = ["Test R-squared", "Test RMSE", "CV Mean (R2)"]
 
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    n_panels = len(metrics)
+    fig, axes = plt.subplots(1, n_panels, figsize=(6 * n_panels, 5))
 
     for ax, metric, title in zip(axes, metrics, titles):
         values = comparison[metric]
@@ -212,10 +230,13 @@ def _plot_cv_scores(trained_models: dict, task_type: str, output_dir: Path):
     names = list(trained_models.keys())
     cv_data = [trained_models[n]["cv_scores"] for n in names]
 
+    # Tick labels set separately: boxplot's `labels` kwarg was renamed in
+    # matplotlib 3.9 and removed later, so avoid it for version compatibility
     bp = ax.boxplot(
-        cv_data, labels=names, patch_artist=True, widths=0.5,
+        cv_data, patch_artist=True, widths=0.5,
         medianprops=dict(color="white", linewidth=2),
     )
+    ax.set_xticks(range(1, len(names) + 1), names)
 
     for patch, color in zip(bp["boxes"], PALETTE[:len(names)]):
         patch.set_facecolor(color)
@@ -228,7 +249,8 @@ def _plot_cv_scores(trained_models: dict, task_type: str, output_dir: Path):
 
     metric_name = "F1 Score" if task_type == "classification" else "R2 Score"
     ax.set_ylabel(f"CV {metric_name}")
-    ax.set_title(f"Cross-Validation Score Distribution ({5}-Fold)",
+    cv_label = trained_models[names[0]].get("cv_label", f"{len(cv_data[0])}-fold CV")
+    ax.set_title(f"Cross-Validation Score Distribution ({cv_label})",
                  fontsize=14, fontweight="bold", pad=15)
 
     # Add mean annotations

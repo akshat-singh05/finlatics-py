@@ -13,6 +13,8 @@ Models:
     Regression: Ridge, Random Forest, Gradient Boosting
 """
 
+import os
+import json
 import time
 import warnings
 import numpy as np
@@ -28,10 +30,17 @@ from sklearn.ensemble import (
     GradientBoostingClassifier, GradientBoostingRegressor,
 )
 
-from sklearn.model_selection import RandomizedSearchCV, cross_val_score
+from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit, cross_val_score
 from scipy.stats import randint, uniform, loguniform
 
+from utils.logger import get_logger
+
+logger = get_logger("trainer")
+
 warnings.filterwarnings("ignore", category=UserWarning)
+
+# Parallel workers for search/CV; lower it (e.g. N_JOBS=2) on low-memory machines
+N_JOBS = int(os.environ.get("N_JOBS", "-1"))
 
 
 # =====================================================================
@@ -98,7 +107,7 @@ def _get_classification_configs():
             "n_iter": 20,
         },
         "Random Forest": {
-            "model": RandomForestClassifier(random_state=42, n_jobs=-1),
+            "model": RandomForestClassifier(random_state=42, n_jobs=N_JOBS),
             "params": {
                 "model__n_estimators": randint(100, 500),
                 "model__max_depth": [5, 8, 12, 15, None],
@@ -135,12 +144,14 @@ def _get_regression_configs():
             "n_iter": 20,
         },
         "Random Forest": {
-            "model": RandomForestRegressor(random_state=42, n_jobs=-1),
+            # Bounded depth/size: unbounded forests overfit ~12k rows and need
+            # hundreds of MB; these bounds keep training feasible on 8 GB machines
+            "model": RandomForestRegressor(random_state=42, n_jobs=N_JOBS),
             "params": {
-                "model__n_estimators": randint(100, 500),
-                "model__max_depth": [5, 8, 12, 15, None],
+                "model__n_estimators": randint(100, 250),
+                "model__max_depth": [6, 10, 14, 18],
                 "model__min_samples_split": randint(2, 20),
-                "model__min_samples_leaf": randint(1, 10),
+                "model__min_samples_leaf": randint(2, 10),
                 "model__max_features": ["sqrt", "log2", None],
             },
             "n_iter": 30,
@@ -170,7 +181,11 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
 
     Each model is wrapped in:
         Pipeline([preprocessor, model])
-            -> RandomizedSearchCV(pipeline, param_grid, cv=cv_folds)
+            -> RandomizedSearchCV(pipeline, param_grid, cv=splitter)
+
+    If ``prepared_data["time_ordered"]`` is True (rows sorted by date), the
+    folds are TimeSeriesSplit: every validation fold lies after its
+    training folds, mirroring the held-out test period.
 
     Parameters
     ----------
@@ -214,7 +229,13 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
 
     print("\n" + "=" * 60)
     print(f"MODEL TRAINING WITH HYPERPARAMETER TUNING ({task_type.upper()})")
-    print(f"  Strategy: RandomizedSearchCV | CV folds: {cv_folds} | Scoring: {scoring}")
+    if prepared_data.get("time_ordered"):
+        splitter = TimeSeriesSplit(n_splits=cv_folds)
+        cv_label = f"{cv_folds}-fold time-series CV"
+    else:
+        splitter = cv_folds
+        cv_label = f"{cv_folds}-fold CV"
+    print(f"  Strategy: RandomizedSearchCV | {cv_label} | Scoring: {scoring}")
     print("=" * 60)
 
     for name, config in configs.items():
@@ -233,10 +254,10 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
             estimator=pipeline,
             param_distributions=config["params"],
             n_iter=config["n_iter"],
-            cv=cv_folds,
+            cv=splitter,
             scoring=scoring,
             random_state=42,
-            n_jobs=-1,
+            n_jobs=N_JOBS,
             return_train_score=True,
             error_score="raise",
         )
@@ -250,7 +271,7 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
 
         # Cross-validation scores on training data with best model
         cv_scores = cross_val_score(
-            best_pipeline, X_train, y_train, cv=cv_folds, scoring=scoring
+            best_pipeline, X_train, y_train, cv=splitter, scoring=scoring, n_jobs=N_JOBS
         )
 
         # Extract best params (clean names)
@@ -268,6 +289,7 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
             "cv_std": round(cv_scores.std(), 4),
             "predictions": predictions,
             "train_time": round(train_time, 2),
+            "cv_label": cv_label,
         }
 
         # Get probabilities for classification
@@ -282,9 +304,12 @@ def train_all_models(prepared_data: dict, cv_folds: int = 5) -> dict:
         print(f"    Best CV score: {search.best_score_:.4f}")
         print(f"    CV mean +/- std: {cv_scores.mean():.4f} +/- {cv_scores.std():.4f}")
         print(f"    Best params: {best_params}")
+        logger.info("Model [%s] trained: CV=%.4f±%.4f, time=%.1fs",
+                    name, cv_scores.mean(), cv_scores.std(), train_time)
 
     print(f"\n  Trained {len(results)} optimized models.")
     print("=" * 60)
+    logger.info("Training complete: %d models", len(results))
 
     return results
 
@@ -348,3 +373,59 @@ def get_feature_importance(pipeline, feature_names_in: list) -> pd.DataFrame:
         df["importance_pct"] = (df["importance"] / total * 100).round(2)
 
     return df
+
+
+# =====================================================================
+# TRAINING METADATA
+# =====================================================================
+
+def save_training_metadata(
+    model_path,
+    best_model_name: str,
+    comparison_df,
+    prepared_data: dict,
+) -> str:
+    """
+    Save training metadata as a JSON sidecar file alongside the model.
+
+    Parameters
+    ----------
+    model_path : Path
+        Path to the saved .joblib pipeline file.
+    best_model_name : str
+        Name of the best model.
+    comparison_df : pd.DataFrame
+        Model comparison table from evaluator.
+    prepared_data : dict
+        Output from feature_engineering.prepare_features().
+
+    Returns
+    -------
+    str
+        Path to the saved metadata JSON file.
+    """
+    from pathlib import Path
+    from datetime import datetime
+
+    model_path = Path(model_path)
+    meta_path = model_path.with_suffix(".meta.json")
+
+    metadata = {
+        "timestamp": datetime.now().isoformat(),
+        "target_type": prepared_data.get("target_type"),
+        "task_type": prepared_data.get("task_type"),
+        "best_model": best_model_name,
+        "feature_count": prepared_data.get("feature_count"),
+        "feature_names": prepared_data.get("feature_names", []),
+        "numeric_features": prepared_data.get("numeric_features", []),
+        "categorical_features": prepared_data.get("categorical_features", []),
+        "train_samples": len(prepared_data.get("X_train", [])),
+        "test_samples": len(prepared_data.get("X_test", [])),
+        "model_comparison": comparison_df.to_dict(orient="index")
+        if comparison_df is not None else {},
+    }
+
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2, default=str)
+
+    return str(meta_path)

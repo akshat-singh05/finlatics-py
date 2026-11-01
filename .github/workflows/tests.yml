@@ -1,0 +1,27 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run analysis pipeline (no ML)
+        run: python main.py --no-ml
+
+      # Model-dependent tests skip here: training takes ~20 min and the
+      # trained model is not committed. Run `python main.py` locally for them.
+      - name: Run tests
+        run: pytest -q

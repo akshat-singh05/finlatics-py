@@ -25,6 +25,7 @@ COLORS = {
     "success": "#10B981",
     "danger": "#EF4444",
     "info": "#3B82F6",
+    "warning": "#F59E0B",
 }
 
 
@@ -32,6 +33,7 @@ def generate_ml_diagnostics(
     trained_models: dict,
     prepared_data: dict,
     output_dir: str | Path = "output",
+    best_name: str | None = None,
 ):
     """
     Generate ML diagnostic plots for the best model.
@@ -44,20 +46,24 @@ def generate_ml_diagnostics(
         Output from feature_engineering.prepare_features().
     output_dir : str or Path
         Save directory.
+    best_name : str, optional
+        Model selected by the evaluator (by CV). If omitted, falls back to
+        the best test score, which should only be used for exploration.
     """
     task_type = prepared_data["task_type"]
     y_test = prepared_data["y_test"]
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     print("\n" + "=" * 60)
     print("ML DIAGNOSTIC VISUALIZATIONS")
     print("=" * 60)
 
     # Find best model
-    if task_type == "classification":
+    if best_name is None and task_type == "classification":
         from sklearn.metrics import f1_score as f1
         best_name = max(trained_models, key=lambda n: f1(y_test, trained_models[n]["predictions"], average="weighted"))
-    else:
+    elif best_name is None:
         best_name = max(trained_models, key=lambda n: r2_score(y_test, trained_models[n]["predictions"]))
 
     best = trained_models[best_name]
