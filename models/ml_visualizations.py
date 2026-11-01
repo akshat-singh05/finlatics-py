@@ -25,6 +25,7 @@ COLORS = {
     "success": "#10B981",
     "danger": "#EF4444",
     "info": "#3B82F6",
+    "warning": "#F59E0B",
 }
 
 

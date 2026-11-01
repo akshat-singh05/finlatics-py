@@ -1,0 +1,228 @@
+{
+  "question": "Revenue (and derived margin) for a planned inventory buy",
+  "target": "log1p(revenue)",
+  "features": [
+    "campaign_number",
+    "user_engagement",
+    "banner",
+    "placement",
+    "weekday",
+    "log_displays",
+    "log_cost",
+    "day_index"
+  ],
+  "train_rows": 12373,
+  "test_rows": 3030,
+  "test_start": "2020-06-10",
+  "selected_model": "Gradient Boosting",
+  "results": {
+    "Baseline: global rate": {
+      "revenue": {
+        "r2_log": 0.572823,
+        "mae_log": 0.481091,
+        "rmse_log": 0.722792,
+        "mae_usd": 6.570806,
+        "total_predicted_vs_actual": 1.765866
+      },
+      "profitability": {
+        "accuracy": 0.441254,
+        "precision": 0.405572,
+        "recall": 0.957301,
+        "f1": 0.569759,
+        "roc_auc": 0.721883,
+        "confusion": {
+          "tn": 216,
+          "fp": 1643,
+          "fn": 50,
+          "tp": 1121
+        }
+      },
+      "margin": {
+        "buy_predicted_profitable": -359.968,
+        "buy_everything": -1798.3335,
+        "oracle": 4171.1447,
+        "share_of_oracle": -0.0863,
+        "rows_bought_share": 0.912211
+      },
+      "material_rows": {
+        "rows": 849,
+        "revenue": {
+          "r2_log": 0.300435,
+          "mae_log": 0.847922,
+          "rmse_log": 1.023607,
+          "mae_usd": 20.791983,
+          "total_predicted_vs_actual": 1.689312
+        },
+        "profitability": {
+          "accuracy": 0.539458,
+          "precision": 0.504087,
+          "recall": 0.93199,
+          "f1": 0.654288,
+          "roc_auc": 0.55706,
+          "confusion": {
+            "tn": 88,
+            "fp": 364,
+            "fn": 27,
+            "tp": 370
+          }
+        }
+      }
+    },
+    "Baseline: segment rate (all history)": {
+      "revenue": {
+        "r2_log": 0.900338,
+        "mae_log": 0.201059,
+        "rmse_log": 0.34912,
+        "mae_usd": 6.429058,
+        "total_predicted_vs_actual": 1.982698
+      },
+      "profitability": {
+        "accuracy": 0.693399,
+        "precision": 0.565904,
+        "recall": 0.887276,
+        "f1": 0.691054,
+        "roc_auc": 0.795234,
+        "confusion": {
+          "tn": 1062,
+          "fp": 797,
+          "fn": 132,
+          "tp": 1039
+        }
+      },
+      "margin": {
+        "buy_predicted_profitable": -1244.9414,
+        "buy_everything": -1798.3335,
+        "oracle": 4171.1447,
+        "share_of_oracle": -0.298465,
+        "rows_bought_share": 0.605941
+      },
+      "material_rows": {
+        "rows": 849,
+        "revenue": {
+          "r2_log": 0.784046,
+          "mae_log": 0.452285,
+          "rmse_log": 0.568722,
+          "mae_usd": 22.459458,
+          "total_predicted_vs_actual": 2.027469
+        },
+        "profitability": {
+          "accuracy": 0.664311,
+          "precision": 0.590615,
+          "recall": 0.919395,
+          "f1": 0.719212,
+          "roc_auc": 0.674288,
+          "confusion": {
+            "tn": 199,
+            "fp": 253,
+            "fn": 32,
+            "tp": 365
+          }
+        }
+      }
+    },
+    "Baseline: segment rate (last 21 days)": {
+      "revenue": {
+        "r2_log": 0.961489,
+        "mae_log": 0.120007,
+        "rmse_log": 0.217022,
+        "mae_usd": 1.529812,
+        "total_predicted_vs_actual": 1.176175
+      },
+      "profitability": {
+        "accuracy": 0.809241,
+        "precision": 0.7035,
+        "recall": 0.87532,
+        "f1": 0.780061,
+        "roc_auc": 0.901243,
+        "confusion": {
+          "tn": 1427,
+          "fp": 432,
+          "fn": 146,
+          "tp": 1025
+        }
+      },
+      "margin": {
+        "buy_predicted_profitable": 3974.8608,
+        "buy_everything": -1798.3335,
+        "oracle": 4171.1447,
+        "share_of_oracle": 0.952942,
+        "rows_bought_share": 0.480858
+      },
+      "material_rows": {
+        "rows": 849,
+        "revenue": {
+          "r2_log": 0.954873,
+          "mae_log": 0.197714,
+          "rmse_log": 0.259978,
+          "mae_usd": 5.023008,
+          "total_predicted_vs_actual": 1.192174
+        },
+        "profitability": {
+          "accuracy": 0.939929,
+          "precision": 0.930348,
+          "recall": 0.942065,
+          "f1": 0.93617,
+          "roc_auc": 0.966898,
+          "confusion": {
+            "tn": 424,
+            "fp": 28,
+            "fn": 23,
+            "tp": 374
+          }
+        }
+      }
+    },
+    "Model: Gradient Boosting": {
+      "revenue": {
+        "r2_log": 0.964803,
+        "mae_log": 0.112966,
+        "rmse_log": 0.207474,
+        "mae_usd": 0.924146,
+        "total_predicted_vs_actual": 0.979886
+      },
+      "profitability": {
+        "accuracy": 0.818812,
+        "precision": 0.72151,
+        "recall": 0.865073,
+        "f1": 0.786796,
+        "roc_auc": 0.903069,
+        "confusion": {
+          "tn": 1468,
+          "fp": 391,
+          "fn": 158,
+          "tp": 1013
+        }
+      },
+      "margin": {
+        "buy_predicted_profitable": 4047.7896,
+        "buy_everything": -1798.3335,
+        "oracle": 4171.1447,
+        "share_of_oracle": 0.970427,
+        "rows_bought_share": 0.463366
+      },
+      "material_rows": {
+        "rows": 849,
+        "revenue": {
+          "r2_log": 0.968235,
+          "mae_log": 0.161087,
+          "rmse_log": 0.218119,
+          "mae_usd": 2.846421,
+          "total_predicted_vs_actual": 0.988312
+        },
+        "profitability": {
+          "accuracy": 0.943463,
+          "precision": 0.980716,
+          "recall": 0.896725,
+          "f1": 0.936842,
+          "roc_auc": 0.986898,
+          "confusion": {
+            "tn": 445,
+            "fp": 7,
+            "fn": 41,
+            "tp": 356
+          }
+        }
+      }
+    }
+  }
+}

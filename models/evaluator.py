@@ -230,10 +230,13 @@ def _plot_cv_scores(trained_models: dict, task_type: str, output_dir: Path):
     names = list(trained_models.keys())
     cv_data = [trained_models[n]["cv_scores"] for n in names]
 
+    # Tick labels set separately: boxplot's `labels` kwarg was renamed in
+    # matplotlib 3.9 and removed later, so avoid it for version compatibility
     bp = ax.boxplot(
-        cv_data, labels=names, patch_artist=True, widths=0.5,
+        cv_data, patch_artist=True, widths=0.5,
         medianprops=dict(color="white", linewidth=2),
     )
+    ax.set_xticks(range(1, len(names) + 1), names)
 
     for patch, color in zip(bp["boxes"], PALETTE[:len(names)]):
         patch.set_facecolor(color)
