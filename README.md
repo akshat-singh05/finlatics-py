@@ -34,7 +34,7 @@ Company X ran display-ad campaigns through an ad network, **Advert Firm A**, fro
 | Deliverable | Where |
 |---|---|
 | Reproducible pipeline (load → clean → KPIs → EDA → ML) | `python main.py` |
-| EDA report: 12 questions, 12 charts | [`reports/eda_findings.md`](reports/eda_findings.md) |
+| EDA report: the 20 official questions, 19 charts | [`reports/eda_findings.md`](reports/eda_findings.md) |
 | Model report: method, baselines, results, SHAP | [`reports/model_report.md`](reports/model_report.md) |
 | Walkthrough notebook (executed, with outputs) | [`notebooks/project_walkthrough.ipynb`](notebooks/project_walkthrough.ipynb) |
 | Interactive dashboard | `streamlit run streamlit_app.py` |
@@ -46,7 +46,7 @@ Company X ran display-ad campaigns through an ad network, **Advert Firm A**, fro
 
 **Predictive objective.** Answer: *"If Advert Firm A buys this inventory, how much revenue will it earn, and will it make a margin?"* The model uses only information available before the ads run, and is evaluated on a later time period than it was trained on.
 
-> **Note on the brief:** the official Finlatics question list was not available. The EDA questions in [`reports/eda_findings.md`](reports/eda_findings.md) were written for this project to cover the standard brief for this dataset.
+> **The brief:** the Finlatics problem statement lists 20 questions. [`reports/eda_findings.md`](reports/eda_findings.md) answers each one in order (Q1–Q20), with a chart and the supporting numbers.
 
 ## Dataset
 
@@ -86,6 +86,7 @@ Company X's *profit* cannot be computed because the data has no product costs.
 | Conversions > clicks | 328 | flagged and kept (attribution window) |
 | Conversions with 0 clicks | 31 | flagged and kept |
 | Clicks > displays | 2 | flagged and kept |
+| Clicks but $0 revenue | 206 | kept; raised for investigation (EDA Q12) |
 
 `data/synthetic/` contains an earlier synthetic dataset (from `scripts/generate_data.py`) that was used before the original data was recovered. It is kept for reference only and is not used by the pipeline.
 
@@ -115,7 +116,7 @@ finlatics-py/
 │   ├── data_loader.py           #   load CSV, validate schema
 │   ├── data_cleaning.py         #   clean, build dates, flag suspicious rows
 │   ├── metrics.py               #   KPIs + ratio-of-totals aggregation
-│   ├── visualizations.py        #   12 EDA charts
+│   ├── visualizations.py        #   19 EDA charts (answer Q1–Q20)
 │   └── insights.py              #   computed findings -> reports/eda_findings.json
 ├── models/                      # ML layer
 │   ├── feature_engineering.py   #   pre-delivery features, leakage list, time split
@@ -155,13 +156,13 @@ finlatics-py/
   All grouped rates are **ratio-of-totals** (e.g. Σclicks ÷ Σdisplays), and a zero denominator gives NaN, not 0.
 
 ### 2. Exploratory data analysis
-Twelve questions cover:
-- trends over time and by month (separating out the campaign mix)
-- engagement segments
-- banner size and placement performance
-- cost-revenue and metric correlations (Pearson and Spearman)
-- campaign × engagement rates and banner × placement margin
-- skew and revenue concentration, weekday patterns, clicks → conversions
+The report answers the program's 20 questions. They cover:
+- trends over time: engagement, displays, clicks and post-click sales
+- banner size and placement: clicks, displays, conversion rates and the distribution of conversions
+- campaigns: conversion rates, ROI consistency, cost per click and cost per conversion
+- user engagement: by banner size, vs revenue, weekdays vs weekends, and by campaign
+- cost-revenue correlation (Pearson and Spearman) and outliers
+- day-of-week patterns in volume and conversion rate
 
 Skewed volumes use log scales.
 
@@ -190,6 +191,10 @@ Skewed volumes use log scales.
 | Best banner / placement by CTR | 240×400 (1.69%) / ghi (2.09%); placement mno has 60% of displays but only 6% ROI |
 | Revenue concentration | top 1% of rows = **42%** of revenue; top 10% = **89%** |
 | Cost vs revenue | Pearson r = 0.76, Spearman ρ = 0.92 (strong monotonic link; Pearson is pulled down by skew) |
+| Revenue per click | **$0.111** on average; set per campaign (camp 1 ≈ $0.16, camp 2 $0.040, camp 3 $0.054) |
+| Most consistent ROI | **240×400** had the best firm ROI in all 14 weeks and was the only banner profitable every month |
+| Conversions | camp 1 converts 44.9% of clicks vs 1.6–2.4% for the others; High-engagement users convert 4–27× better within a campaign |
+| Post-click sales | fell 49% while ad spend fell 86%, so Company X's ROAS rose from about 75× to 280× |
 
 ![Performance over time](reports/figures/01_daily_trends.png)
 

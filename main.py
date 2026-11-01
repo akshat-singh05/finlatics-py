@@ -21,7 +21,7 @@ Usage:
     N_JOBS=2 python main.py                   # Fewer workers on low-memory machines
 
 Outputs:
-    - reports/figures/: 12 EDA charts; reports/eda_findings.json
+    - reports/figures/: 19 EDA charts; reports/eda_findings.json
     - reports/figures/ml/: model vs baselines; reports/model_evaluation.json
     - output/ml/: CV, feature importance, SHAP and residual charts
     - models/saved/revenue_model.joblib (+ .meta.json)

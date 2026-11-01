@@ -42,6 +42,9 @@
         "conversion_rate": 0.151749,
         "firm_roi": 0.895418,
         "advertiser_roas": 78.387851,
+        "firm_cpc": 0.053468,
+        "advertiser_cpc": 0.101343,
+        "advertiser_cpa": 0.667837,
         "record_count": 6267,
         "active_days": 30,
         "revenue_share": 0.609358
@@ -58,6 +61,9 @@
         "conversion_rate": 0.434198,
         "firm_roi": 0.43013,
         "advertiser_roas": 147.413671,
+        "firm_cpc": 0.102947,
+        "advertiser_cpc": 0.147227,
+        "advertiser_cpa": 0.339079,
         "record_count": 4705,
         "active_days": 31,
         "revenue_share": 0.287729
@@ -74,6 +80,9 @@
         "conversion_rate": 0.566352,
         "firm_roi": -0.076768,
         "advertiser_roas": 274.406691,
+        "firm_cpc": 0.105533,
+        "advertiser_cpc": 0.097431,
+        "advertiser_cpa": 0.172033,
         "record_count": 4431,
         "active_days": 30,
         "revenue_share": 0.102913
@@ -92,6 +101,9 @@
         "conversion_rate": 0.305536,
         "firm_roi": 0.859231,
         "advertiser_roas": 90.13342,
+        "firm_cpc": 0.092029,
+        "advertiser_cpc": 0.171102,
+        "advertiser_cpa": 0.560007,
         "record_count": 4653,
         "active_days": 30,
         "revenue_share": 0.552891
@@ -108,6 +120,9 @@
         "conversion_rate": 0.434198,
         "firm_roi": 0.43013,
         "advertiser_roas": 147.413671,
+        "firm_cpc": 0.102947,
+        "advertiser_cpc": 0.147227,
+        "advertiser_cpa": 0.339079,
         "record_count": 4705,
         "active_days": 31,
         "revenue_share": 0.32932
@@ -124,6 +139,9 @@
         "conversion_rate": 0.566352,
         "firm_roi": -0.076768,
         "advertiser_roas": 274.406691,
+        "firm_cpc": 0.105533,
+        "advertiser_cpc": 0.097431,
+        "advertiser_cpa": 0.172033,
         "record_count": 4431,
         "active_days": 30,
         "revenue_share": 0.117789
@@ -146,6 +164,9 @@
       "conversion_rate": 0.449273,
       "firm_roi": 0.529872,
       "advertiser_roas": 134.525532,
+      "firm_cpc": 0.106937,
+      "advertiser_cpc": 0.1636,
+      "advertiser_cpa": 0.364145,
       "record_count": 6873,
       "active_days": 91,
       "revenue_share": 0.834472,
@@ -164,6 +185,9 @@
       "conversion_rate": 0.015624,
       "firm_roi": 1.047878,
       "advertiser_roas": 33.46216,
+      "firm_cpc": 0.019335,
+      "advertiser_cpc": 0.039596,
+      "advertiser_cpa": 2.534351,
       "record_count": 1614,
       "active_days": 30,
       "revenue_share": 0.126294,
@@ -182,6 +206,9 @@
       "conversion_rate": 0.024257,
       "firm_roi": 0.451593,
       "advertiser_roas": 49.383954,
+      "firm_cpc": 0.036865,
+      "advertiser_cpc": 0.053514,
+      "advertiser_cpa": 2.206122,
       "record_count": 6916,
       "active_days": 91,
       "revenue_share": 0.039233,
@@ -203,6 +230,9 @@
         "conversion_rate": 0.471332,
         "firm_roi": 0.44595,
         "advertiser_roas": 143.602452,
+        "firm_cpc": 0.111433,
+        "advertiser_cpc": 0.161127,
+        "advertiser_cpa": 0.341854,
         "record_count": 4881,
         "active_days": 91,
         "revenue_share": 0.768341
@@ -219,6 +249,9 @@
         "conversion_rate": 0.027253,
         "firm_roi": 1.289913,
         "advertiser_roas": 36.109732,
+        "firm_cpc": 0.023942,
+        "advertiser_cpc": 0.054824,
+        "advertiser_cpa": 2.011637,
         "record_count": 5489,
         "active_days": 91,
         "revenue_share": 0.213038
@@ -235,6 +268,9 @@
         "conversion_rate": 0.015559,
         "firm_roi": 0.911161,
         "advertiser_roas": 21.109127,
+        "firm_cpc": 0.026406,
+        "advertiser_cpc": 0.050466,
+        "advertiser_cpa": 3.243628,
         "record_count": 5033,
         "active_days": 91,
         "revenue_share": 0.018621
@@ -253,6 +289,9 @@
         "conversion_rate": 0.480882,
         "firm_roi": 0.468137,
         "advertiser_roas": 142.796953,
+        "firm_cpc": 0.111678,
+        "advertiser_cpc": 0.163958,
+        "advertiser_cpa": 0.340953,
         "record_count": 2597,
         "active_days": 91,
         "revenue_share": 0.761775
@@ -269,6 +308,9 @@
         "conversion_rate": 0.015769,
         "firm_roi": 1.095035,
         "advertiser_roas": 34.275889,
+        "firm_cpc": 0.018902,
+        "advertiser_cpc": 0.039601,
+        "advertiser_cpa": 2.511352,
         "record_count": 853,
         "active_days": 30,
         "revenue_share": 0.117476
@@ -285,6 +327,9 @@
         "conversion_rate": 0.126544,
         "firm_roi": 1.739389,
         "advertiser_roas": 47.788036,
+        "firm_cpc": 0.058341,
+        "advertiser_cpc": 0.159818,
+        "advertiser_cpa": 1.262952,
         "record_count": 2253,
         "active_days": 91,
         "revenue_share": 0.069712
@@ -301,6 +346,9 @@
         "conversion_rate": 0.008129,
         "firm_roi": 1.245545,
         "advertiser_roas": 12.950186,
+        "firm_cpc": 0.023827,
+        "advertiser_cpc": 0.053505,
+        "advertiser_cpa": 6.582018,
         "record_count": 2383,
         "active_days": 91,
         "revenue_share": 0.02585
@@ -317,6 +365,9 @@
         "conversion_rate": 0.013697,
         "firm_roi": 0.575467,
         "advertiser_roas": 22.621989,
+        "firm_cpc": 0.025096,
+        "advertiser_cpc": 0.039537,
+        "advertiser_cpa": 2.886503,
         "record_count": 761,
         "active_days": 30,
         "revenue_share": 0.008818
@@ -333,6 +384,9 @@
         "conversion_rate": 0.004254,
         "firm_roi": 1.262336,
         "advertiser_roas": 6.794667,
+        "firm_cpc": 0.023613,
+        "advertiser_cpc": 0.05342,
+        "advertiser_cpa": 12.556287,
         "record_count": 2249,
         "active_days": 91,
         "revenue_share": 0.006818
@@ -349,6 +403,9 @@
         "conversion_rate": 0.108781,
         "firm_roi": -0.474875,
         "advertiser_roas": 237.06498,
+        "firm_cpc": 0.102154,
+        "advertiser_cpc": 0.053644,
+        "advertiser_cpa": 0.493134,
         "record_count": 2284,
         "active_days": 91,
         "revenue_share": 0.006565
@@ -365,6 +422,9 @@
         "conversion_rate": 0.11695,
         "firm_roi": 1.635787,
         "advertiser_roas": 49.329837,
+        "firm_cpc": 0.061814,
+        "advertiser_cpc": 0.162928,
+        "advertiser_cpa": 1.393146,
         "record_count": 2023,
         "active_days": 91,
         "revenue_share": 0.002985
@@ -385,6 +445,9 @@
         "conversion_rate": 0.242408,
         "firm_roi": 1.303101,
         "advertiser_roas": 104.60706,
+        "firm_cpc": 0.050676,
+        "advertiser_cpc": 0.116712,
+        "advertiser_cpa": 0.481469,
         "record_count": 2424,
         "active_days": 91,
         "revenue_share": 0.470314
@@ -401,6 +464,9 @@
         "conversion_rate": 0.299147,
         "firm_roi": 0.217899,
         "advertiser_roas": 126.871543,
+        "firm_cpc": 0.092749,
+        "advertiser_cpc": 0.112959,
+        "advertiser_cpa": 0.377604,
         "record_count": 3142,
         "active_days": 91,
         "revenue_share": 0.232902
@@ -417,6 +483,9 @@
         "conversion_rate": 0.291308,
         "firm_roi": 0.218204,
         "advertiser_roas": 147.761348,
+        "firm_cpc": 0.08618,
+        "advertiser_cpc": 0.104985,
+        "advertiser_cpa": 0.360392,
         "record_count": 2820,
         "active_days": 91,
         "revenue_share": 0.156269
@@ -433,6 +502,9 @@
         "conversion_rate": 0.203636,
         "firm_roi": 0.342446,
         "advertiser_roas": 102.283513,
+        "firm_cpc": 0.073117,
+        "advertiser_cpc": 0.098156,
+        "advertiser_cpa": 0.482018,
         "record_count": 1803,
         "active_days": 76,
         "revenue_share": 0.085116
@@ -449,6 +521,9 @@
         "conversion_rate": 0.263165,
         "firm_roi": 0.246651,
         "advertiser_roas": 146.00669,
+        "firm_cpc": 0.074399,
+        "advertiser_cpc": 0.09275,
+        "advertiser_cpa": 0.35244,
         "record_count": 606,
         "active_days": 91,
         "revenue_share": 0.040516
@@ -465,6 +540,9 @@
         "conversion_rate": 0.285434,
         "firm_roi": 0.053669,
         "advertiser_roas": 127.819408,
+        "firm_cpc": 0.102625,
+        "advertiser_cpc": 0.108133,
+        "advertiser_cpa": 0.378836,
         "record_count": 2352,
         "active_days": 91,
         "revenue_share": 0.014562
@@ -481,6 +559,9 @@
         "conversion_rate": 0.42471,
         "firm_roi": -0.545372,
         "advertiser_roas": 317.906499,
+        "firm_cpc": 0.148766,
+        "advertiser_cpc": 0.067633,
+        "advertiser_cpa": 0.159245,
         "record_count": 1899,
         "active_days": 91,
         "revenue_share": 0.000317
@@ -497,6 +578,9 @@
         "conversion_rate": 0.25,
         "firm_roi": -0.609508,
         "advertiser_roas": 103.716054,
+        "firm_cpc": 0.231033,
+        "advertiser_cpc": 0.090217,
+        "advertiser_cpa": 0.360867,
         "record_count": 357,
         "active_days": 91,
         "revenue_share": 4e-06
@@ -526,6 +610,9 @@
         "conversion_rate": 0.270288,
         "firm_roi": 1.435737,
         "advertiser_roas": 108.538242,
+        "firm_cpc": 0.049893,
+        "advertiser_cpc": 0.121525,
+        "advertiser_cpa": 0.449614,
         "record_count": 3482,
         "active_days": 91,
         "revenue_share": 0.548565
@@ -542,6 +629,9 @@
         "conversion_rate": 0.265014,
         "firm_roi": 0.057387,
         "advertiser_roas": 135.021791,
+        "firm_cpc": 0.095673,
+        "advertiser_cpc": 0.101164,
+        "advertiser_cpa": 0.381729,
         "record_count": 4499,
         "active_days": 91,
         "revenue_share": 0.363634
@@ -558,6 +648,9 @@
         "conversion_rate": 0.169528,
         "firm_roi": 0.116377,
         "advertiser_roas": 99.47541,
+        "firm_cpc": 0.080682,
+        "advertiser_cpc": 0.090071,
+        "advertiser_cpa": 0.531308,
         "record_count": 3537,
         "active_days": 91,
         "revenue_share": 0.057413
@@ -574,6 +667,9 @@
         "conversion_rate": 0.277807,
         "firm_roi": 1.274236,
         "advertiser_roas": 131.064626,
+        "firm_cpc": 0.048354,
+        "advertiser_cpc": 0.109967,
+        "advertiser_cpa": 0.395842,
         "record_count": 2504,
         "active_days": 91,
         "revenue_share": 0.029879
@@ -590,6 +686,9 @@
         "conversion_rate": 0.520202,
         "firm_roi": 0.101152,
         "advertiser_roas": 304.630014,
+        "firm_cpc": 0.080414,
+        "advertiser_cpc": 0.088548,
+        "advertiser_cpa": 0.170219,
         "record_count": 968,
         "active_days": 91,
         "revenue_share": 0.000508
@@ -606,6 +705,9 @@
         "conversion_rate": 0.4,
         "firm_roi": -0.893787,
         "advertiser_roas": 640.344279,
+        "firm_cpc": 0.55624,
+        "advertiser_cpc": 0.05908,
+        "advertiser_cpa": 0.1477,
         "record_count": 413,
         "active_days": 84,
         "revenue_share": 1e-06
@@ -634,6 +736,9 @@
         "conversion_rate": 0.242433,
         "firm_roi": 2.30153,
         "advertiser_roas": 101.389177,
+        "firm_cpc": 0.036326,
+        "advertiser_cpc": 0.119933,
+        "advertiser_cpa": 0.494703,
         "record_count": 606,
         "active_days": 91,
         "revenue_share": 0.376072
@@ -650,6 +755,9 @@
         "conversion_rate": 0.38085,
         "firm_roi": 0.366603,
         "advertiser_roas": 131.46681,
+        "firm_cpc": 0.097417,
+        "advertiser_cpc": 0.13313,
+        "advertiser_cpa": 0.349561,
         "record_count": 606,
         "active_days": 91,
         "revenue_share": 0.116507
@@ -666,6 +774,9 @@
         "conversion_rate": 0.226294,
         "firm_roi": 1.982745,
         "advertiser_roas": 102.610697,
+        "firm_cpc": 0.035953,
+        "advertiser_cpc": 0.107239,
+        "advertiser_cpa": 0.473892,
         "record_count": 606,
         "active_days": 91,
         "revenue_share": 0.045644
@@ -682,6 +793,9 @@
         "conversion_rate": 0.201603,
         "firm_roi": 0.411194,
         "advertiser_roas": 102.367757,
+        "firm_cpc": 0.068323,
+        "advertiser_cpc": 0.096417,
+        "advertiser_cpa": 0.478254,
         "record_count": 516,
         "active_days": 76,
         "revenue_share": 0.073117
@@ -698,6 +812,9 @@
         "conversion_rate": 0.265843,
         "firm_roi": 1.454595,
         "advertiser_roas": 130.718973,
+        "firm_cpc": 0.044314,
+        "advertiser_cpc": 0.108773,
+        "advertiser_cpa": 0.409162,
         "record_count": 606,
         "active_days": 91,
         "revenue_share": 0.020702
@@ -719,6 +836,9 @@
         "conversion_rate": 0.277474,
         "firm_roi": -0.169341,
         "advertiser_roas": 123.864213,
+        "firm_cpc": 0.134509,
+        "advertiser_cpc": 0.111731,
+        "advertiser_cpa": 0.402672,
         "record_count": 606,
         "active_days": 91,
         "revenue_share": 0.059027
@@ -735,6 +855,9 @@
         "conversion_rate": 0.332346,
         "firm_roi": -0.029874,
         "advertiser_roas": 170.365052,
+        "firm_cpc": 0.109655,
+        "advertiser_cpc": 0.106379,
+        "advertiser_cpa": 0.320085,
         "record_count": 606,
         "active_days": 91,
         "revenue_share": 0.096993
@@ -751,6 +874,9 @@
         "conversion_rate": 0.410348,
         "firm_roi": -0.212274,
         "advertiser_roas": 135.095752,
+        "firm_cpc": 0.178089,
+        "advertiser_cpc": 0.140285,
+        "advertiser_cpa": 0.341868,
         "record_count": 515,
         "active_days": 76,
         "revenue_share": 0.004976
@@ -767,6 +893,9 @@
         "conversion_rate": 0.268589,
         "firm_roi": -0.059512,
         "advertiser_roas": 126.709699,
+        "firm_cpc": 0.109219,
+        "advertiser_cpc": 0.102719,
+        "advertiser_cpa": 0.382441,
         "record_count": 606,
         "active_days": 91,
         "revenue_share": 0.006371
@@ -783,6 +912,9 @@
         "conversion_rate": 0.443272,
         "firm_roi": -0.537776,
         "advertiser_roas": 369.319184,
+        "firm_cpc": 0.157268,
+        "advertiser_cpc": 0.072693,
+        "advertiser_cpa": 0.163992,
         "record_count": 605,
         "active_days": 91,
         "revenue_share": 0.000199
@@ -850,6 +982,15 @@
       "Friday": 23724.461538,
       "Thursday": 22632.153846
     },
+    "avg_daily_displays": {
+      "Saturday": 2894809.923077,
+      "Sunday": 2835231.0,
+      "Wednesday": 2753201.769231,
+      "Monday": 2755857.307692,
+      "Tuesday": 2608990.0,
+      "Friday": 2379686.076923,
+      "Thursday": 2157936.307692
+    },
     "ctr": {
       "Saturday": 0.01036,
       "Sunday": 0.01037,
@@ -859,6 +1000,24 @@
       "Friday": 0.00997,
       "Thursday": 0.010488
     },
+    "conversion_rate": {
+      "Saturday": 0.250378,
+      "Sunday": 0.260899,
+      "Wednesday": 0.248422,
+      "Monday": 0.268465,
+      "Tuesday": 0.27455,
+      "Friday": 0.270088,
+      "Thursday": 0.260372
+    },
+    "conversion_rate_camp1": {
+      "Saturday": 0.423155,
+      "Sunday": 0.435181,
+      "Wednesday": 0.437997,
+      "Monday": 0.450223,
+      "Tuesday": 0.452392,
+      "Friday": 0.478948,
+      "Thursday": 0.48543
+    },
     "best_day": "Saturday",
     "worst_day": "Thursday",
     "best_to_worst_ratio": 1.385559
@@ -867,5 +1026,721 @@
     "flag_clicks_gt_displays": 2,
     "flag_conv_gt_clicks": 328,
     "flag_conv_without_clicks": 31
+  },
+  "revenue_per_click": {
+    "overall": 0.110823,
+    "by_month": {
+      "April": 0.101343,
+      "May": 0.147227,
+      "June": 0.097431
+    },
+    "by_campaign": {
+      "camp 1": 0.1636,
+      "camp 2": 0.039596,
+      "camp 3": 0.053514
+    },
+    "sales_per_click": 13.123829
+  },
+  "sales_trend": {
+    "monthly": {
+      "April": {
+        "post_click_sales_amount": 13196042.9334,
+        "advertiser_roas": 78.387851
+      },
+      "May": {
+        "post_click_sales_amount": 11717718.8759,
+        "advertiser_roas": 147.413671
+      },
+      "June": {
+        "post_click_sales_amount": 7801648.4224,
+        "advertiser_roas": 274.406691
+      }
+    },
+    "monthly_by_campaign": {
+      "April | camp 1": 11793993.4316,
+      "May | camp 1": 11552703.0775,
+      "April | camp 2": 1167508.6743,
+      "June | camp 1": 7665948.2207,
+      "April | camp 3": 234540.8275,
+      "May | camp 3": 165015.7984,
+      "June | camp 3": 135700.2017
+    },
+    "first_14_days_avg_daily_sales": 472615.820157,
+    "last_14_days_avg_daily_sales": 240269.546257,
+    "sales_change_first_to_last_14_days": -0.491618,
+    "camp1_sales_share": 0.947952,
+    "top_5_sales_days": {
+      "2020-04-05": 575301.4028,
+      "2020-04-04": 537908.7395,
+      "2020-05-16": 535943.1148,
+      "2020-04-01": 531308.7972,
+      "2020-04-03": 530984.9128
+    }
+  },
+  "engagement_by_banner": {
+    "display_share": {
+      "160 x 600": {
+        "Low": 0.134904,
+        "Medium": 0.391292,
+        "High": 0.473804
+      },
+      "240 x 400": {
+        "Low": 0.057286,
+        "Medium": 0.283338,
+        "High": 0.659375
+      },
+      "300 x 250": {
+        "Low": 0.111864,
+        "Medium": 0.32853,
+        "High": 0.559607
+      },
+      "468 x 60": {
+        "Low": 0.07778,
+        "Medium": 0.308209,
+        "High": 0.614011
+      },
+      "580 x 400": {
+        "Low": 0.115808,
+        "Medium": 0.369601,
+        "High": 0.514591
+      },
+      "670 x 90": {
+        "Low": 0.107355,
+        "Medium": 0.311747,
+        "High": 0.580898
+      },
+      "728 x 90": {
+        "Low": 0.081882,
+        "Medium": 0.302129,
+        "High": 0.615989
+      },
+      "800 x 250": {
+        "Low": 0.192072,
+        "Medium": 0.342143,
+        "High": 0.465786
+      }
+    },
+    "ctr": {
+      "160 x 600": {
+        "Low": 0.003782,
+        "Medium": 0.011271,
+        "High": 0.007182
+      },
+      "240 x 400": {
+        "Low": 0.007359,
+        "Medium": 0.024078,
+        "High": 0.01468
+      },
+      "300 x 250": {
+        "Low": 0.004105,
+        "Medium": 0.010369,
+        "High": 0.006492
+      },
+      "468 x 60": {
+        "Low": 0.001572,
+        "Medium": 0.003155,
+        "High": 0.001251
+      },
+      "580 x 400": {
+        "Low": 0.01097,
+        "Medium": 0.02401,
+        "High": 0.012905
+      },
+      "670 x 90": {
+        "Low": 0.003333,
+        "Medium": 0.009056,
+        "High": 0.006158
+      },
+      "728 x 90": {
+        "Low": 0.003709,
+        "Medium": 0.010029,
+        "High": 0.00672
+      },
+      "800 x 250": {
+        "Low": 0.0,
+        "Medium": 0.011034,
+        "High": 0.004053
+      }
+    },
+    "most_high_engagement_banner": "240 x 400",
+    "least_high_engagement_banner": "800 x 250",
+    "banners_where_medium_has_best_ctr": 8,
+    "banner_count": 8
+  },
+  "engagement_revenue": {
+    "spearman_engagement_revenue": 0.201755,
+    "revenue_per_1000_displays": {
+      "High": 1.495067,
+      "Medium": 0.779184,
+      "Low": 0.239221
+    },
+    "revenue_share": {
+      "High": 0.768341,
+      "Medium": 0.213038,
+      "Low": 0.018621
+    },
+    "advertiser_cpc": {
+      "High": 0.161127,
+      "Medium": 0.054824,
+      "Low": 0.050466
+    }
+  },
+  "placement_conversions": {
+    "conversion_rate": {
+      "ghi": 0.270288,
+      "mno": 0.265014,
+      "def": 0.169528,
+      "jkl": 0.277807,
+      "abc": 0.520202,
+      "Unknown": 0.4
+    },
+    "conversion_share": {
+      "ghi": 0.517157,
+      "mno": 0.403778,
+      "def": 0.045804,
+      "jkl": 0.031995,
+      "abc": 0.001264,
+      "Unknown": 3e-06
+    },
+    "highest_conversion_rate": "abc",
+    "lowest_conversion_rate": "def",
+    "per_row": {
+      "Unknown": {
+        "count": 413.0,
+        "mean": 0.004843,
+        "std": 0.069504,
+        "min": 0.0,
+        "50%": 0.0,
+        "90%": 0.0,
+        "99%": 0.0,
+        "max": 1.0
+      },
+      "abc": {
+        "count": 968.0,
+        "mean": 0.85124,
+        "std": 5.355856,
+        "min": 0.0,
+        "50%": 0.0,
+        "90%": 0.0,
+        "99%": 29.99,
+        "max": 96.0
+      },
+      "def": {
+        "count": 3537.0,
+        "mean": 8.440204,
+        "std": 26.07748,
+        "min": 0.0,
+        "50%": 0.0,
+        "90%": 19.4,
+        "99%": 130.0,
+        "max": 217.0
+      },
+      "ghi": {
+        "count": 3482.0,
+        "mean": 96.801551,
+        "std": 389.063025,
+        "min": 0.0,
+        "50%": 0.0,
+        "90%": 70.0,
+        "99%": 2395.93,
+        "max": 3369.0
+      },
+      "jkl": {
+        "count": 2504.0,
+        "mean": 8.327875,
+        "std": 32.753159,
+        "min": 0.0,
+        "50%": 0.0,
+        "90%": 9.0,
+        "99%": 179.91,
+        "max": 403.0
+      },
+      "mno": {
+        "count": 4499.0,
+        "mean": 58.494554,
+        "std": 182.975308,
+        "min": 0.0,
+        "50%": 0.0,
+        "90%": 70.4,
+        "99%": 879.02,
+        "max": 1582.0
+      }
+    },
+    "zero_conversion_row_share": {
+      "Unknown": 0.995157,
+      "abc": 0.932851,
+      "def": 0.659599,
+      "ghi": 0.601666,
+      "jkl": 0.733227,
+      "mno": 0.501667
+    }
+  },
+  "outliers": {
+    "cost": {
+      "raw_iqr_upper_outliers": 2515,
+      "log_iqr_upper_outliers": 1228,
+      "p99": 278.191428,
+      "max": 556.7048
+    },
+    "clicks": {
+      "raw_iqr_upper_outliers": 2325,
+      "log_iqr_upper_outliers": 0,
+      "p99": 2846.62,
+      "max": 14566
+    },
+    "revenue": {
+      "raw_iqr_upper_outliers": 2512,
+      "log_iqr_upper_outliers": 943,
+      "p99": 341.98,
+      "max": 2096.2116
+    },
+    "top_5_revenue_rows": [
+      {
+        "date": "2020-04-04",
+        "campaign_number": "camp 1",
+        "user_engagement": "High",
+        "banner": "240 x 400",
+        "placement": "ghi",
+        "clicks": 11545,
+        "revenue": 2096.2116
+      },
+      {
+        "date": "2020-04-05",
+        "campaign_number": "camp 1",
+        "user_engagement": "High",
+        "banner": "240 x 400",
+        "placement": "ghi",
+        "clicks": 11047,
+        "revenue": 2004.2415
+      },
+      {
+        "date": "2020-04-07",
+        "campaign_number": "camp 1",
+        "user_engagement": "High",
+        "banner": "240 x 400",
+        "placement": "ghi",
+        "clicks": 10740,
+        "revenue": 1932.6366
+      },
+      {
+        "date": "2020-04-14",
+        "campaign_number": "camp 1",
+        "user_engagement": "High",
+        "banner": "240 x 400",
+        "placement": "ghi",
+        "clicks": 10211,
+        "revenue": 1924.0
+      },
+      {
+        "date": "2020-04-11",
+        "campaign_number": "camp 1",
+        "user_engagement": "High",
+        "banner": "240 x 400",
+        "placement": "ghi",
+        "clicks": 10444,
+        "revenue": 1910.897
+      }
+    ],
+    "clicks_but_zero_revenue_rows": 206,
+    "revenue_without_clicks_rows": 0
+  },
+  "campaign_banner_placement": {
+    "campaign_banner": {
+      "camp 1 | 240 x 400": {
+        "clicks": 681333,
+        "ctr": 0.015599,
+        "conversion_rate": 0.38484,
+        "firm_roi": 1.404949
+      },
+      "camp 1 | 728 x 90": {
+        "clicks": 338423,
+        "ctr": 0.007048,
+        "conversion_rate": 0.490457,
+        "firm_roi": 0.169944
+      },
+      "camp 1 | 300 x 250": {
+        "clicks": 212008,
+        "ctr": 0.006913,
+        "conversion_rate": 0.548663,
+        "firm_roi": 0.114192
+      },
+      "camp 1 | 160 x 600": {
+        "clicks": 106230,
+        "ctr": 0.007727,
+        "conversion_rate": 0.442474,
+        "firm_roi": 0.181651
+      },
+      "camp 2 | 240 x 400": {
+        "clicks": 387497,
+        "ctr": 0.029631,
+        "conversion_rate": 0.015918,
+        "firm_roi": 1.102234
+      },
+      "camp 1 | 580 x 400": {
+        "clicks": 49559,
+        "ctr": 0.01406,
+        "conversion_rate": 0.619686,
+        "firm_roi": 0.035857
+      },
+      "camp 2 | 728 x 90": {
+        "clicks": 186494,
+        "ctr": 0.013753,
+        "conversion_rate": 0.018049,
+        "firm_roi": 0.627793
+      },
+      "camp 2 | 300 x 250": {
+        "clicks": 141996,
+        "ctr": 0.014521,
+        "conversion_rate": 0.014874,
+        "firm_roi": 1.122155
+      },
+      "camp 2 | 160 x 600": {
+        "clicks": 102110,
+        "ctr": 0.015727,
+        "conversion_rate": 0.012183,
+        "firm_roi": 1.605686
+      },
+      "camp 1 | 670 x 90": {
+        "clicks": 20967,
+        "ctr": 0.006488,
+        "conversion_rate": 0.492297,
+        "firm_roi": -0.019552
+      },
+      "camp 3 | 300 x 250": {
+        "clicks": 57210,
+        "ctr": 0.003975,
+        "conversion_rate": 0.02372,
+        "firm_roi": 0.665856
+      },
+      "camp 3 | 728 x 90": {
+        "clicks": 44689,
+        "ctr": 0.003053,
+        "conversion_rate": 0.023451,
+        "firm_roi": 0.447465
+      },
+      "camp 3 | 240 x 400": {
+        "clicks": 44424,
+        "ctr": 0.004921,
+        "conversion_rate": 0.03354,
+        "firm_roi": -0.033019
+      },
+      "camp 2 | 580 x 400": {
+        "clicks": 50436,
+        "ctr": 0.033339,
+        "conversion_rate": 0.013086,
+        "firm_roi": 1.91975
+      },
+      "camp 3 | 160 x 600": {
+        "clicks": 31220,
+        "ctr": 0.003655,
+        "conversion_rate": 0.017136,
+        "firm_roi": 0.858202
+      },
+      "camp 3 | 580 x 400": {
+        "clicks": 20686,
+        "ctr": 0.009612,
+        "conversion_rate": 0.018757,
+        "firm_roi": 1.274137
+      },
+      "camp 2 | 670 x 90": {
+        "clicks": 12090,
+        "ctr": 0.012617,
+        "conversion_rate": 0.017204,
+        "firm_roi": 0.572091
+      },
+      "camp 3 | 670 x 90": {
+        "clicks": 4146,
+        "ctr": 0.003153,
+        "conversion_rate": 0.021466,
+        "firm_roi": 0.768385
+      }
+    },
+    "banner_placement": {
+      "240 x 400 | ghi": {
+        "clicks": 866275,
+        "ctr": 0.025904,
+        "conversion_rate": 0.242433,
+        "firm_roi": 2.30153
+      },
+      "728 x 90 | ghi": {
+        "clicks": 241767,
+        "ctr": 0.013477,
+        "conversion_rate": 0.38085,
+        "firm_roi": 0.366603
+      },
+      "300 x 250 | mno": {
+        "clicks": 251888,
+        "ctr": 0.005959,
+        "conversion_rate": 0.332346,
+        "firm_roi": -0.029874
+      },
+      "728 x 90 | mno": {
+        "clicks": 247106,
+        "ctr": 0.005458,
+        "conversion_rate": 0.242892,
+        "firm_roi": 0.074692
+      },
+      "160 x 600 | mno": {
+        "clicks": 209501,
+        "ctr": 0.008655,
+        "conversion_rate": 0.201603,
+        "firm_roi": 0.411194
+      },
+      "240 x 400 | mno": {
+        "clicks": 145949,
+        "ctr": 0.006956,
+        "conversion_rate": 0.277474,
+        "firm_roi": -0.169341
+      },
+      "300 x 250 | ghi": {
+        "clicks": 117586,
+        "ctr": 0.020473,
+        "conversion_rate": 0.226294,
+        "firm_roi": 1.982745
+      },
+      "580 x 400 | mno": {
+        "clicks": 120681,
+        "ctr": 0.016785,
+        "conversion_rate": 0.263165,
+        "firm_roi": 0.246651
+      },
+      "240 x 400 | jkl": {
+        "clicks": 52580,
+        "ctr": 0.011236,
+        "conversion_rate": 0.265843,
+        "firm_roi": 1.454595
+      },
+      "728 x 90 | def": {
+        "clicks": 60257,
+        "ctr": 0.005799,
+        "conversion_rate": 0.195164,
+        "firm_roi": -0.005294
+      },
+      "240 x 400 | def": {
+        "clicks": 48450,
+        "ctr": 0.007254,
+        "conversion_rate": 0.110898,
+        "firm_roi": 0.343033
+      },
+      "300 x 250 | def": {
+        "clicks": 38932,
+        "ctr": 0.006248,
+        "conversion_rate": 0.217045,
+        "firm_roi": 0.052761
+      },
+      "728 x 90 | jkl": {
+        "clicks": 19160,
+        "ctr": 0.007864,
+        "conversion_rate": 0.305532,
+        "firm_roi": 1.254018
+      },
+      "160 x 600 | def": {
+        "clicks": 20257,
+        "ctr": 0.005749,
+        "conversion_rate": 0.124648,
+        "firm_roi": 0.33311
+      },
+      "670 x 90 | mno": {
+        "clicks": 17134,
+        "ctr": 0.006216,
+        "conversion_rate": 0.268589,
+        "firm_roi": -0.059512
+      },
+      "670 x 90 | ghi": {
+        "clicks": 11525,
+        "ctr": 0.007668,
+        "conversion_rate": 0.368503,
+        "firm_roi": 0.234772
+      },
+      "160 x 600 | ghi": {
+        "clicks": 9799,
+        "ctr": 0.009331,
+        "conversion_rate": 0.410348,
+        "firm_roi": -0.212274
+      },
+      "670 x 90 | def": {
+        "clicks": 7763,
+        "ctr": 0.006465,
+        "conversion_rate": 0.209584,
+        "firm_roi": 0.028763
+      },
+      "300 x 250 | jkl": {
+        "clicks": 2538,
+        "ctr": 0.004783,
+        "conversion_rate": 0.345548,
+        "firm_roi": 0.041644
+      },
+      "728 x 90 | abc": {
+        "clicks": 1311,
+        "ctr": 0.00733,
+        "conversion_rate": 0.521739,
+        "firm_roi": 0.234318
+      }
+    },
+    "best_banner_by_ctr_per_campaign": {
+      "camp 1": "240 x 400",
+      "camp 2": "580 x 400",
+      "camp 3": "580 x 400"
+    }
+  },
+  "roi_consistency": {
+    "monthly_firm_roi_by_banner": {
+      "160 x 600": {
+        "April": 0.547299,
+        "May": 0.135634,
+        "June": -0.014113
+      },
+      "240 x 400": {
+        "April": 1.655586,
+        "May": 1.28745,
+        "June": 0.267253
+      },
+      "300 x 250": {
+        "April": 0.577584,
+        "May": 0.06665,
+        "June": -0.283325
+      },
+      "468 x 60": {
+        "April": -0.281166,
+        "May": -0.683235,
+        "June": -0.891269
+      },
+      "580 x 400": {
+        "April": 0.519503,
+        "May": 0.027203,
+        "June": -0.13618
+      },
+      "670 x 90": {
+        "April": 0.239298,
+        "May": -0.003455,
+        "June": -0.381542
+      },
+      "728 x 90": {
+        "April": 0.437949,
+        "May": 0.149225,
+        "June": -0.262556
+      },
+      "800 x 250": {
+        "April": null,
+        "May": null,
+        "June": null
+      }
+    },
+    "monthly_firm_roi_by_campaign": {
+      "camp 1": {
+        "April": 0.87793,
+        "May": 0.42479,
+        "June": -0.113335
+      },
+      "camp 2": {
+        "April": 1.047878,
+        "May": null,
+        "June": null
+      },
+      "camp 3": {
+        "April": 0.424934,
+        "May": 0.557844,
+        "June": 0.382075
+      }
+    },
+    "monthly_roas_by_campaign": {
+      "April | camp 1": 91.263273,
+      "May | camp 1": 151.98197,
+      "April | camp 2": 33.46216,
+      "June | camp 1": 303.128496,
+      "April | camp 3": 55.550749,
+      "May | camp 3": 47.485972,
+      "June | camp 3": 43.195499
+    },
+    "weeks_as_top_banner_by_roi": {
+      "240 x 400": 14
+    },
+    "weeks": 14,
+    "banners_profitable_every_month": [
+      "240 x 400"
+    ]
+  },
+  "weekend_engagement": {
+    "days": {
+      "weekday": 65,
+      "weekend": 26
+    },
+    "High | weekday": {
+      "avg_daily_displays": 1509211.261538,
+      "avg_daily_clicks": 13852.8,
+      "avg_daily_revenue": 2237.760092,
+      "ctr": 0.009179
+    },
+    "High | weekend": {
+      "avg_daily_displays": 1687590.538462,
+      "avg_daily_clicks": 16036.115385,
+      "avg_daily_revenue": 2569.591008,
+      "ctr": 0.009502
+    },
+    "Medium | weekday": {
+      "avg_daily_displays": 796868.923077,
+      "avg_daily_clicks": 11533.646154,
+      "avg_daily_revenue": 628.55134,
+      "ctr": 0.014474
+    },
+    "Medium | weekend": {
+      "avg_daily_displays": 912959.461538,
+      "avg_daily_clicks": 12455.0,
+      "avg_daily_revenue": 692.254323,
+      "ctr": 0.013642
+    },
+    "Low | weekday": {
+      "avg_daily_displays": 225054.107692,
+      "avg_daily_clicks": 1086.507692,
+      "avg_daily_revenue": 54.634325,
+      "ctr": 0.004828
+    },
+    "Low | weekend": {
+      "avg_daily_displays": 264470.461538,
+      "avg_daily_clicks": 1204.384615,
+      "avg_daily_revenue": 61.275504,
+      "ctr": 0.004554
+    },
+    "click_mix": {
+      "weekday": {
+        "Low": 0.041042,
+        "Medium": 0.435677,
+        "High": 0.523281
+      },
+      "weekend": {
+        "Low": 0.040558,
+        "Medium": 0.419424,
+        "High": 0.540018
+      }
+    }
+  },
+  "cost_per_conversion": {
+    "by_campaign": {
+      "camp 1": 0.364145,
+      "camp 2": 2.534351,
+      "camp 3": 2.206122
+    },
+    "by_placement": {
+      "abc": 0.170219,
+      "mno": 0.381729,
+      "jkl": 0.395842,
+      "ghi": 0.449614,
+      "def": 0.531308
+    },
+    "by_campaign_placement": {
+      "camp 1 | abc": 0.157971,
+      "camp 1 | mno": 0.306028,
+      "camp 1 | jkl": 0.34421,
+      "camp 1 | def": 0.392816,
+      "camp 1 | ghi": 0.408401,
+      "camp 3 | ghi": 1.393168,
+      "camp 3 | jkl": 1.408694,
+      "camp 2 | jkl": 1.913478,
+      "camp 2 | ghi": 2.265493,
+      "camp 3 | mno": 2.373776,
+      "camp 2 | mno": 2.855815,
+      "camp 2 | def": 3.000735,
+      "camp 3 | def": 3.540948
+    }
   }
 }
