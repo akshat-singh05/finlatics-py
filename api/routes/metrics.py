@@ -1,9 +1,10 @@
-"""Metrics routes: overall, by campaign, by channel, by device."""
+"""Metrics routes: overall KPIs and per-dimension breakdowns."""
 
-import json
 from flask import Blueprint, request, jsonify
 
-from api.services.data_service import get_filtered_dataset, get_overall_metrics, get_summary_by
+from api.services.data_service import (
+    GROUP_DIMENSIONS, apply_filters, overall_metrics, resolve_dimension, summary_records,
+)
 from utils.logger import get_logger
 
 logger = get_logger("routes.metrics")
@@ -13,56 +14,42 @@ metrics_bp = Blueprint("metrics", __name__)
 
 @metrics_bp.route("/metrics", methods=["GET"])
 def metrics():
-    """Return overall KPI metrics. Optional query params: campaign, channel, device."""
-    try:
-        campaign = request.args.get("campaign")
-        channel = request.args.get("channel")
-        device = request.args.get("device")
+    """
+    Overall totals and KPIs.
 
-        df = get_filtered_dataset(campaign, channel, device)
+    Optional query params: campaign_number, user_engagement, banner,
+    placement, start, end (YYYY-MM-DD, inclusive).
+    """
+    df, errors = apply_filters(request.args)
+    if errors:
+        return jsonify({"error": "Invalid filters", "messages": errors}), 400
+    if df.empty:
+        return jsonify({"error": "No data matches filters"}), 404
 
-        if len(df) == 0:
-            return jsonify({"error": "No data matches filters"}), 404
-
-        result = get_overall_metrics(df)
-        result["filters"] = {"campaign": campaign, "channel": channel, "device": device}
-        return jsonify(result)
-
-    except FileNotFoundError as e:
-        return jsonify({"error": str(e)}), 404
-    except Exception as e:
-        logger.exception("Error in /metrics endpoint")
-        return jsonify({"error": str(e)}), 500
+    result = overall_metrics(df)
+    result["filters"] = dict(request.args)
+    return jsonify(result)
 
 
-@metrics_bp.route("/metrics/campaign", methods=["GET"])
-def metrics_by_campaign():
-    """Return metrics grouped by campaign."""
-    try:
-        summary = get_summary_by("campaign")
-        return jsonify(json.loads(summary.reset_index().to_json(orient="records")))
-    except Exception as e:
-        logger.exception("Error in /metrics/campaign endpoint")
-        return jsonify({"error": str(e)}), 500
+@metrics_bp.route("/metrics/<dimension>", methods=["GET"])
+def metrics_by(dimension):
+    """
+    Totals and KPIs grouped by a dimension.
 
+    dimension: campaign_number (alias campaign), user_engagement (alias
+    engagement), banner, placement, month, weekday, date. Accepts the
+    same filters as /metrics.
+    """
+    column = resolve_dimension(dimension)
+    if column is None:
+        return jsonify({"error": f"Unknown dimension '{dimension}'",
+                        "valid": GROUP_DIMENSIONS}), 404
 
-@metrics_bp.route("/metrics/channel", methods=["GET"])
-def metrics_by_channel():
-    """Return metrics grouped by channel."""
-    try:
-        summary = get_summary_by("channel")
-        return jsonify(json.loads(summary.reset_index().to_json(orient="records")))
-    except Exception as e:
-        logger.exception("Error in /metrics/channel endpoint")
-        return jsonify({"error": str(e)}), 500
+    df, errors = apply_filters(request.args)
+    if errors:
+        return jsonify({"error": "Invalid filters", "messages": errors}), 400
+    if df.empty:
+        return jsonify({"error": "No data matches filters"}), 404
 
-
-@metrics_bp.route("/metrics/device", methods=["GET"])
-def metrics_by_device():
-    """Return metrics grouped by device."""
-    try:
-        summary = get_summary_by("device")
-        return jsonify(json.loads(summary.reset_index().to_json(orient="records")))
-    except Exception as e:
-        logger.exception("Error in /metrics/device endpoint")
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"dimension": column, "filters": dict(request.args),
+                    "groups": summary_records(df, column)})

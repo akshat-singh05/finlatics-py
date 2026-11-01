@@ -32,7 +32,7 @@ def create_app() -> Flask:
         logger.warning("flask-cors not installed — CORS disabled")
 
     # Register Blueprints
-    from api.routes.health import health_bp
+    from api.routes.health import health_bp, API_VERSION
     from api.routes.metrics import metrics_bp
     from api.routes.predict import predict_bp
 
@@ -54,7 +54,7 @@ def create_app() -> Flask:
                 "%s %s %s %.1fms",
                 request.method, request.path, response.status_code, elapsed,
             )
-        response.headers["X-API-Version"] = "2.0.0"
+        response.headers["X-API-Version"] = API_VERSION
         response.headers["X-Request-ID"] = g.request_id
         return response
 

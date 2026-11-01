@@ -53,3 +53,6 @@ logs/
 # EDA figures are part of the written report
 !reports/figures/*.png
 !reports/figures/ml/*.png
+
+# Local editor/agent tooling
+.claude/

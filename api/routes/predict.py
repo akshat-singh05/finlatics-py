@@ -1,9 +1,10 @@
-"""Predict route: ML inference endpoint."""
+"""Predict route: revenue / margin for planned inventory buys."""
 
 from flask import Blueprint, request, jsonify
 
-from api.services.prediction_service import predict
-from api.utils.validation import validate_predict_input
+from models.predictor import (
+    MAX_BATCH, ModelNotAvailable, predict, valid_categories, validate_request,
+)
 from utils.logger import get_logger
 
 logger = get_logger("routes.predict")
@@ -14,55 +15,44 @@ predict_bp = Blueprint("predict", __name__)
 @predict_bp.route("/predict", methods=["POST"])
 def predict_endpoint():
     """
-    Predict campaign profitability.
+    Predict revenue, margin and profitability for one or more planned buys.
 
-    JSON body:
+    JSON body: one object or a list of up to MAX_BATCH objects, e.g.
         {
-            "campaign": "Brand Awareness",
-            "channel": "Google Ads",
-            "device": "Mobile",
-            "impressions": 5000,
-            "clicks": 80,
-            "spend": 150.0,
-            "conversions": 5,
-            "bounce_rate": 0.5,
-            "avg_session_duration": 120.0
+            "date": "2020-06-15",
+            "campaign_number": "camp 1",
+            "user_engagement": "High",
+            "banner": "240 x 400",
+            "placement": "ghi",
+            "displays": 20000,
+            "cost": 25.0
         }
 
-    Optional:
-        "target": "high_roi" (default) | "revenue" | "high_conversion"
-
-    Returns:
-        {
-            "prediction": 1,
-            "label": "Profitable",
-            "confidence": 0.87,
-            "target_type": "high_roi",
-            "interpretation": { ... }
-        }
+    Returns a result object (or list) with predicted_revenue, cost,
+    predicted_margin, predicted_roi, profitable and warnings.
     """
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({"error": "Request body must be JSON"}), 400
+
+    single = isinstance(data, dict)
+    items = [data] if single else data
+    if not isinstance(items, list) or not items:
+        return jsonify({"error": "Body must be an object or a non-empty list"}), 400
+    if len(items) > MAX_BATCH:
+        return jsonify({"error": f"At most {MAX_BATCH} items per request"}), 400
+
     try:
-        data = request.get_json(force=True)
-        if not data:
-            return jsonify({"error": "No JSON body provided"}), 400
+        categories = valid_categories()
+    except ModelNotAvailable as e:
+        return jsonify({"error": str(e)}), 503
 
-        target = data.pop("target", "high_roi")
+    errors = {i: errs for i, item in enumerate(items)
+              if (errs := validate_request(item, categories))}
+    if errors:
+        logger.warning("Prediction validation failed: %s", errors)
+        messages = errors[0] if single else {str(k): v for k, v in errors.items()}
+        return jsonify({"error": "Validation failed", "messages": messages}), 400
 
-        validation_errors = validate_predict_input(data)
-        if validation_errors:
-            logger.warning("Prediction validation failed: %s", validation_errors)
-            return jsonify({
-                "error": "Validation failed",
-                "messages": validation_errors,
-            }), 400
-
-        result = predict(data, target)
-        return jsonify(result)
-
-    except ValueError as e:
-        return jsonify({"error": "Validation error", "message": str(e)}), 400
-    except FileNotFoundError as e:
-        return jsonify({"error": str(e)}), 404
-    except Exception as e:
-        logger.exception("Prediction failed")
-        return jsonify({"error": "Prediction failed", "message": str(e)}), 500
+    results = predict(items)
+    return jsonify(results[0] if single else results)

@@ -1,18 +1,21 @@
 """
 Finlatics-Py: REST API for Advertising Analytics & Predictions
 
-Run:  python app.py
+Run:  python app.py           (http://127.0.0.1:5000)
 Endpoints:
-    GET  /health          - Health check
-    GET  /api/info        - Model metadata & valid categories
-    GET  /metrics          - Overall KPI metrics
-    GET  /metrics?campaign=X&channel=Y&device=Z
-    GET  /metrics/campaign - Per-campaign breakdown
-    GET  /metrics/channel  - Per-channel breakdown
-    GET  /metrics/device   - Per-device breakdown
-    POST /predict          - Predict profitability from JSON input
+    GET  /health                  - Health check (data / model availability)
+    GET  /api/info                - Dataset summary, valid filters, model metadata
+    GET  /metrics                 - Overall KPIs
+         ?campaign_number=camp 1&user_engagement=High&banner=240 x 400
+         &placement=ghi&start=2020-04-01&end=2020-04-30
+    GET  /metrics/<dimension>     - KPIs per campaign_number, user_engagement,
+                                    banner, placement, month, weekday, date
+    GET  /insights                - EDA findings (reports/eda_findings.json)
+    GET  /model                   - Model vs baselines (reports/model_evaluation.json)
+    POST /predict                 - Revenue / margin for planned buys (object or list)
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -20,6 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from api import create_app
+from api.routes.health import API_VERSION
 from utils.logger import get_logger
 
 logger = get_logger("api")
@@ -29,20 +33,10 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    logger.info("Starting Finlatics-Py API server")
-    print("=" * 50)
-    print("  Finlatics-Py API Server v2.0.0")
-    print("=" * 50)
-    print(f"  Data:   {PROJECT_ROOT / 'data'}")
-    print(f"  Models: {PROJECT_ROOT / 'models' / 'saved'}")
-    print("  Endpoints:")
-    print("    GET  /health")
-    print("    GET  /api/info")
-    print("    GET  /metrics")
-    print("    GET  /metrics?campaign=X&channel=Y&device=Z")
-    print("    GET  /metrics/campaign")
-    print("    GET  /metrics/channel")
-    print("    GET  /metrics/device")
-    print("    POST /predict")
-    print("=" * 50)
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    # Localhost by default; set API_HOST=0.0.0.0 to expose on the network
+    host = os.environ.get("API_HOST", "127.0.0.1")
+    port = int(os.environ.get("API_PORT", "5000"))
+    logger.info("Starting Finlatics-Py API server on %s:%d", host, port)
+    print(__doc__)
+    print(f"  Finlatics-Py API v{API_VERSION} -> http://{host}:{port}")
+    app.run(host=host, port=port, debug=False)
