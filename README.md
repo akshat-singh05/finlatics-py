@@ -20,10 +20,11 @@
 7. [Results](#results)
 8. [Installation](#installation)
 9. [How to run](#how-to-run)
-10. [Dashboard](#dashboard)
-11. [REST API](#rest-api)
-12. [Testing](#testing)
-13. [Limitations & future improvements](#limitations--future-improvements)
+10. [Web app](#web-app)
+11. [Streamlit dashboard](#streamlit-dashboard)
+12. [REST API](#rest-api)
+13. [Testing](#testing)
+14. [Limitations & future improvements](#limitations--future-improvements)
 
 ---
 
@@ -37,8 +38,9 @@ Company X ran display-ad campaigns through an ad network, **Advert Firm A**, fro
 | EDA report: the 20 official questions, 19 charts | [`reports/eda_findings.md`](reports/eda_findings.md) |
 | Model report: method, baselines, results, SHAP | [`reports/model_report.md`](reports/model_report.md) |
 | Walkthrough notebook (executed, with outputs) | [`notebooks/project_walkthrough.ipynb`](notebooks/project_walkthrough.ipynb) |
-| Interactive dashboard | `streamlit run streamlit_app.py` |
-| REST API | `python app.py` |
+| **Web app**: KPIs, breakdowns, segments, the 20 questions, predictor, model, data | `python app.py`, then open http://127.0.0.1:5000 |
+| REST API (same server) | `python app.py` |
+| Streamlit dashboard (alternative) | `streamlit run streamlit_app.py` |
 
 ## Problem statement & objectives
 
@@ -99,8 +101,9 @@ Company X's *profit* cannot be computed because the data has no product costs.
 | Matplotlib | Static EDA and model charts |
 | scikit-learn | Pipelines, Ridge / Random Forest / Gradient Boosting, time-series CV |
 | SHAP | Model explainability |
-| Streamlit, Plotly | Interactive dashboard |
-| Flask | REST API |
+| Flask | REST API and web app server |
+| HTML, CSS, JavaScript (no build step), Plotly.js | Web app front end |
+| Streamlit, Plotly | Streamlit dashboard |
 | pytest, GitHub Actions | Tests and CI |
 | Docker | Reproducible environment |
 
@@ -128,14 +131,15 @@ finlatics-py/
 │   ├── predictor.py             #   shared prediction service (API + dashboard)
 │   └── saved/                   #   trained model (generated, git-ignored)
 ├── api/                         # Flask REST API (routes + data service)
+├── web/                         # web app: index.html + static/ (CSS, JS)
 ├── reports/                     # written reports, JSON results, figures
 ├── notebooks/                   # executed walkthrough notebook
-├── tests/                       # pytest suite (data, ML, API, dashboard)
+├── tests/                       # pytest suite (data, ML, API, web app, dashboard)
 ├── utils/                       # logging, chart theme
 ├── scripts/generate_data.py     # synthetic data generator (reference)
 ├── main.py                      # pipeline entry point
 ├── streamlit_app.py             # dashboard
-├── app.py                       # API server
+├── app.py                       # web app + API server
 ├── Dockerfile
 └── requirements.txt
 ```
@@ -266,7 +270,34 @@ docker run --rm -v "${PWD}/reports:/app/reports" -v "${PWD}/output:/app/output" 
 
 **Notebook:** open `notebooks/project_walkthrough.ipynb` for a guided walkthrough using the project modules. It evaluates the saved model, so run `python main.py` first.
 
-## Dashboard
+## Web app
+
+```bash
+python app.py
+```
+
+Then open **http://127.0.0.1:5000**. The same Flask server serves the web app and the REST API, so there is nothing else to start. It works offline: charts use the copy of Plotly.js that ships with the `plotly` Python package.
+
+The filter bar (campaign, engagement, banner, placement, date range) applies to Overview, Breakdown, Segments and Data. The filters, chosen metrics and theme are remembered in the browser.
+
+| Page | Contents |
+|---|---|
+| Overview | KPI tiles for Advert Firm A (revenue, cost, margin, ROI), Company X (sales, ROAS, CPC, CPA) and the audience (displays, clicks, CTR, conversion rate); daily trend of any metric with a 7-day average; the metric by campaign and by engagement level |
+| Breakdown | Any metric by campaign, engagement, banner, placement, month or weekday, plus a sortable table of every metric |
+| Segments | Heatmap of any two dimensions (e.g. banner × placement) with highest and lowest segments |
+| 20 Questions | The answers to the 20 official questions from `reports/eda_findings.md`, with the charts, a search box and previous / next navigation |
+| Predict | Revenue, margin, ROI and a profitable / not-profitable call for a planned buy; the segment's history; the same buy compared across placements, banners, engagement levels or campaigns |
+| Model | Test results of the model against the rate-card baselines, model selection, and the full model report |
+| Data | The cleaned rows, sortable and paginated, with a CSV download of the current filters |
+| API | Every endpoint, with example links |
+
+Rates follow the report's rules: groups below the volume thresholds (1,000 clicks, 10,000 displays, 100 conversions, or $20 of cost for ROI) are faded and are not ranked. The app has light and dark themes and works on phones.
+
+Prediction needs a trained model (`python main.py`).
+
+## Streamlit dashboard
+
+An alternative interface with the same numbers:
 
 ```bash
 streamlit run streamlit_app.py
@@ -291,7 +322,7 @@ Prediction features need a trained model (`python main.py`).
 python app.py
 ```
 
-The server listens on `http://127.0.0.1:5000`. Set `API_HOST=0.0.0.0` to expose it on your network.
+The server listens on `http://127.0.0.1:5000` and also serves the [web app](#web-app) at `/`. Set `API_HOST=0.0.0.0` to expose it on your network, or `API_PORT` to change the port.
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -299,8 +330,12 @@ The server listens on `http://127.0.0.1:5000`. Set `API_HOST=0.0.0.0` to expose 
 | GET | `/api/info` | Dataset summary, valid filter values, model metadata, endpoint list |
 | GET | `/metrics` | Overall KPIs. Filters: `campaign_number`, `user_engagement`, `banner`, `placement`, `start`, `end` |
 | GET | `/metrics/<dimension>` | KPIs per `campaign_number` (`campaign`), `user_engagement` (`engagement`), `banner`, `placement`, `month`, `weekday` or `date`; same filters |
+| GET | `/pivot?rows=<dimension>&cols=<dimension>` | KPIs for every pair of two dimensions (not `date`); same filters |
+| GET | `/data` | Row-level data, paginated: `page`, `page_size` (max 500), `sort` (a column), `order` (`asc` / `desc`); same filters |
+| GET | `/data.csv` | The filtered rows as a CSV download |
 | GET | `/insights` | EDA findings (`reports/eda_findings.json`) |
 | GET | `/model` | Model vs baselines evaluation plus training metadata |
+| GET | `/report/<eda\|model>` | The written reports as Markdown |
 | POST | `/predict` | Predicted revenue / margin / profitability for one buy or a list (max 1,000) |
 
 **Example:**
@@ -328,12 +363,13 @@ curl -X POST http://127.0.0.1:5000/predict -H "Content-Type: application/json" \
 pytest
 ```
 
-The suite has **41 tests** covering:
+The suite has **63 tests** covering:
 - loading and cleaning rules
 - KPI maths
 - leakage and the time split
 - baselines and the metric implementations
 - API validation, filters and predictions
+- the web app: page and assets, reports, pivots, paginated data and CSV export
 - a headless dashboard run (rendering, filtering, prediction form)
 
 Tests that need the trained model skip when it is absent. On every push, GitHub Actions runs the suite and `python main.py --no-ml` twice: once directly, and once inside the Docker image (which it builds first).

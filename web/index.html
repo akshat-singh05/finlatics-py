@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finlatics Ad Analytics</title>
+  <meta name="description" content="Online advertising performance for Advert Firm A and Company X: KPIs, breakdowns, the 20 official questions, and a revenue predictor.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M8 22V14M14 22V9M20 22V16M26 22V11' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/ui/app.css">
+  <script>
+    // Apply the saved theme before first paint
+    try { const t = localStorage.getItem("finlatics-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#/overview">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7"/><path d="M8 22V14M14 22V9M20 22V16M26 22V11"/></svg>
+        </span>
+        <span class="brand-text"><strong>Finlatics</strong><span>Ad Analytics</span></span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Pages">
+        <a href="#/overview" data-page="overview"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/></svg><span>Overview</span></a>
+        <a href="#/breakdown" data-page="breakdown"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Breakdown</span></a>
+        <a href="#/segments" data-page="segments"><svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg><span>Segments</span></a>
+        <a href="#/questions" data-page="questions"><svg viewBox="0 0 24 24"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"/></svg><span>20 Questions</span></a>
+        <a href="#/predict" data-page="predict"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Predict</span></a>
+        <a href="#/model" data-page="model"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM12 22V12M21 7l-9 5-9-5"/></svg><span>Model</span></a>
+        <a href="#/data" data-page="data"><svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/></svg><span>Data</span></a>
+        <a href="#/api" data-page="api"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg><span>API</span></a>
+      </nav>
+      <div class="sidebar-foot">
+        <p id="dataset-meta" class="muted small">Loading dataset…</p>
+        <button id="theme-toggle" class="btn ghost small" type="button" aria-label="Switch colour theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <span>Theme</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div id="status-banner" class="banner" hidden></div>
+      <header class="page-head">
+        <div>
+          <h1 id="page-title">Overview</h1>
+          <p id="page-subtitle" class="muted"></p>
+        </div>
+      </header>
+
+      <section id="filters" class="filters card" aria-label="Filters" hidden>
+        <label>Campaign<select data-filter="campaign_number"><option value="">All</option></select></label>
+        <label>Engagement<select data-filter="user_engagement"><option value="">All</option></select></label>
+        <label>Banner<select data-filter="banner"><option value="">All</option></select></label>
+        <label>Placement<select data-filter="placement"><option value="">All</option></select></label>
+        <label>From<input type="date" data-filter="start" min="2020-04-01" max="2020-06-30"></label>
+        <label>To<input type="date" data-filter="end" min="2020-04-01" max="2020-06-30"></label>
+        <button id="filters-reset" class="btn ghost" type="button">Reset</button>
+      </section>
+
+      <div id="view" class="view" aria-live="polite"></div>
+    </main>
+  </div>
+
+  <dialog id="lightbox" class="lightbox">
+    <form method="dialog"><button class="btn ghost close" aria-label="Close">✕</button></form>
+    <img alt="">
+    <p class="muted small"></p>
+  </dialog>
+
+  <script src="/ui/vendor/plotly.min.js"></script>
+  <script src="/ui/markdown.js"></script>
+  <script src="/ui/app.js"></script>
+</body>
+</html>

@@ -26,6 +26,13 @@ REPORTS_DIR = PROJECT_ROOT / "reports"
 FILTER_COLUMNS = ["campaign_number", "user_engagement", "banner", "placement"]
 GROUP_DIMENSIONS = FILTER_COLUMNS + ["month", "weekday", "date"]
 DIMENSION_ALIASES = {"campaign": "campaign_number", "engagement": "user_engagement"}
+PIVOT_DIMENSIONS = FILTER_COLUMNS + ["month", "weekday"]
+
+# Columns shown in the row-level data view and CSV export (raw fields + margin)
+DATA_COLUMNS = ["date", "campaign_number", "user_engagement", "banner", "placement",
+                "displays", "clicks", "cost", "revenue", "firm_margin",
+                "post_click_conversions", "post_click_sales_amount"]
+MAX_PAGE_SIZE = 500
 
 _dataset_cache = None
 
@@ -103,6 +110,43 @@ def summary_records(df: pd.DataFrame, dimension: str) -> list[dict]:
         summary = summary.sort_values("date")
         summary["date"] = summary["date"].dt.strftime("%Y-%m-%d")
     return json.loads(summary.to_json(orient="records"))  # NaN -> null
+
+
+def pivot_records(df: pd.DataFrame, rows: str, cols: str) -> list[dict]:
+    """Per-cell totals and KPIs for every (rows, cols) pair present in the data."""
+    summary = summarize_by(df, [rows, cols]).reset_index()
+    return json.loads(summary.to_json(orient="records"))
+
+
+def data_page(df: pd.DataFrame, page: int = 1, page_size: int = 50,
+              sort: str = "date", descending: bool = False) -> dict:
+    """
+    One page of rows (DATA_COLUMNS only), sorted by ``sort``.
+
+    ``page`` is 1-based and clamped to the available pages.
+    """
+    if sort not in DATA_COLUMNS:
+        sort = "date"
+    page_size = max(1, min(int(page_size), MAX_PAGE_SIZE))
+    pages = max(1, -(-len(df) // page_size))
+    page = max(1, min(int(page), pages))
+
+    ordered = df[DATA_COLUMNS].sort_values(sort, ascending=not descending, kind="stable")
+    chunk = ordered.iloc[(page - 1) * page_size: page * page_size].copy()
+    chunk["date"] = chunk["date"].dt.strftime("%Y-%m-%d")
+    return {
+        "columns": DATA_COLUMNS,
+        "rows": json.loads(chunk.to_json(orient="records")),
+        "total": len(df), "page": page, "pages": pages, "page_size": page_size,
+        "sort": sort, "descending": descending,
+    }
+
+
+def data_csv(df: pd.DataFrame) -> str:
+    """Filtered rows (DATA_COLUMNS) as CSV text."""
+    out = df[DATA_COLUMNS].copy()
+    out["date"] = out["date"].dt.strftime("%Y-%m-%d")
+    return out.to_csv(index=False, lineterminator="\n")
 
 
 def load_report(name: str) -> dict:

@@ -35,10 +35,12 @@ def create_app() -> Flask:
     from api.routes.health import health_bp, API_VERSION
     from api.routes.metrics import metrics_bp
     from api.routes.predict import predict_bp
+    from api.routes.ui import ui_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(metrics_bp)
     app.register_blueprint(predict_bp)
+    app.register_blueprint(ui_bp)
 
     # Request lifecycle hooks
     @app.before_request
@@ -71,5 +73,5 @@ def create_app() -> Flask:
     def server_error(e):
         return jsonify({"error": "Internal server error", "message": str(e)}), 500
 
-    logger.info("Flask app created with %d blueprints", 3)
+    logger.info("Flask app created with %d blueprints", len(app.blueprints))
     return app

@@ -1,8 +1,10 @@
 """
-Finlatics-Py: REST API for Advertising Analytics & Predictions
+Finlatics-Py: web app and REST API for Advertising Analytics & Predictions
 
-Run:  python app.py           (http://127.0.0.1:5000)
+Run:  python app.py           (web app at http://127.0.0.1:5000)
 Endpoints:
+    GET  /                        - Web app (overview, breakdowns, segments,
+                                    20 questions, predictor, model, data)
     GET  /health                  - Health check (data / model availability)
     GET  /api/info                - Dataset summary, valid filters, model metadata
     GET  /metrics                 - Overall KPIs
@@ -10,8 +12,14 @@ Endpoints:
          &placement=ghi&start=2020-04-01&end=2020-04-30
     GET  /metrics/<dimension>     - KPIs per campaign_number, user_engagement,
                                     banner, placement, month, weekday, date
+    GET  /pivot?rows=banner&cols=placement
+                                  - KPIs for every pair of two dimensions
+    GET  /data                    - Row-level data, paginated (page, page_size,
+                                    sort, order) and filtered like /metrics
+    GET  /data.csv                - Filtered rows as a CSV download
     GET  /insights                - EDA findings (reports/eda_findings.json)
     GET  /model                   - Model vs baselines (reports/model_evaluation.json)
+    GET  /report/<eda|model>      - Written reports as Markdown
     POST /predict                 - Revenue / margin for planned buys (object or list)
 """
 
