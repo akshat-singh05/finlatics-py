@@ -213,18 +213,7 @@ tr.best td:first-child { font-weight: 600; }
 .badge.plain { color: var(--ink-2); }
 .badge.plain::before { display: none; }
 
-/* ---------- Questions / prose ---------- */
-.qlayout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 16px; align-items: start; }
-.qlist { position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; padding: 12px; }
-.qlist input { width: 100%; margin-bottom: 8px; }
-.qlist ol { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
-.qlist li a { display: grid; grid-template-columns: 34px 1fr; gap: 4px; padding: 6px 8px; border-radius: 7px; color: var(--ink-2); text-decoration: none; font-size: 13px; line-height: 1.35; }
-.qlist li a b { color: var(--muted); font-weight: 600; }
-.qlist li a:hover { background: var(--surface-2); color: var(--ink); }
-.qlist li a.active { background: var(--accent-soft); color: var(--ink); }
-.qlist li a.active b { color: var(--accent); }
-.qlist .group { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 10px 8px 4px; }
-.qnav { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--grid); }
+/* ---------- Prose (rendered reports) ---------- */
 
 .prose { max-width: 860px; font-size: 14.5px; line-height: 1.65; }
 .prose h1 { font-size: 20px; margin: 0 0 12px; }
@@ -296,8 +285,7 @@ pre { background: var(--surface-2); border-radius: 8px; padding: 12px; overflow-
   .nav a span { font-size: 13px; }
   .sidebar-foot { margin: 0 0 0 auto; padding: 0; }
   .main { padding: 16px 16px 40px; }
-  .grid.two, .grid.three, .qlayout { grid-template-columns: minmax(0, 1fr); }
-  .qlist { position: static; max-height: 320px; }
+  .grid.two, .grid.three { grid-template-columns: minmax(0, 1fr); }
   .filters label, .controls label:not(.check) { flex: 1 1 140px; }
   .filters select, .filters input, .controls select { min-width: 0; width: 100%; }
 }

@@ -305,7 +305,6 @@
     overview: { title: "Overview", subtitle: "Headline KPIs for Advert Firm A and Company X, with daily trends.", filters: true, render: renderOverview },
     breakdown: { title: "Breakdown", subtitle: "Compare any metric across campaigns, engagement levels, banners, placements, months or weekdays.", filters: true, render: renderBreakdown },
     segments: { title: "Segments", subtitle: "Two dimensions at once, such as banner × placement, to find the segments that win or lose.", filters: true, render: renderSegments },
-    questions: { title: "20 Questions", subtitle: "Answers to the 20 official questions in the problem statement, with the supporting charts.", filters: false, render: renderQuestions },
     predict: { title: "Predict a buy", subtitle: "Estimate revenue, margin and ROI for a planned inventory buy with the trained model.", filters: false, render: renderPredict },
     model: { title: "Model", subtitle: "How the revenue model was tested, and how it compares with simple rate-card rules.", filters: false, render: renderModel },
     data: { title: "Data", subtitle: "Browse, sort and download the cleaned rows behind every number.", filters: true, render: renderData },
@@ -719,35 +718,8 @@
   }
 
   // ------------------------------------------------------------------
-  // 20 Questions (rendered from reports/eda_findings.md)
+  // Report helpers (model report figures)
   // ------------------------------------------------------------------
-  function splitReport(md) {
-    const lines = md.replace(/\r\n?/g, "\n").split("\n");
-    const sections = [];
-    let cur = { id: "intro", title: "About this report", lines: [] };
-    for (const line of lines) {
-      const m = line.match(/^##\s+(.*)$/);
-      if (m) {
-        sections.push(cur);
-        const title = m[1].trim();
-        const q = title.match(/^Q(\d+)\s*·\s*(.*)$/);
-        cur = q
-          ? { id: `q${q[1]}`, num: +q[1], title: q[2], lines: [] }
-          : { id: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), title: title.replace(/^Appendix\s*·\s*/, "Appendix: "), lines: [] };
-      } else {
-        cur.lines.push(line);
-      }
-    }
-    sections.push(cur);
-    for (const s of sections) {
-      s.md = s.lines.join("\n").replace(/\n-{3,}\s*$/g, "").trim();
-      s.text = s.md.replace(/[#*`|>!\[\]()_-]/g, " ").toLowerCase();
-    }
-    const intro = sections[0];
-    intro.md = intro.md.replace(/^#\s+.*\n?/, "").trim(); // the page already has a title
-    return sections;
-  }
-
   const resolveFigure = (src) => (/^https?:/.test(src) ? src : `/report/${src.replace(/^\.?\/?/, "")}`);
 
   function bindLightbox(root) {
@@ -760,53 +732,6 @@
         dlg.showModal();
       });
     }
-  }
-
-  async function renderQuestions({ args, current }) {
-    view.innerHTML = `<div class="qlayout"><div class="card qlist">${skeleton(1)}</div><div class="card">${skeleton(2)}</div></div>`;
-    const md = await getText("/report/eda");
-    if (!current()) return;
-    const sections = splitReport(md);
-    const questions = sections.filter((s) => s.num);
-    const start = sections.filter((s) => !s.num && sections.indexOf(s) < sections.indexOf(questions[0]));
-    const more = sections.filter((s) => !s.num && sections.indexOf(s) > sections.indexOf(questions[0]));
-    const selectedId = args[0] && sections.some((s) => s.id === args[0]) ? args[0] : "q1";
-    const sel = sections.find((s) => s.id === selectedId);
-    const order = [...start, ...questions, ...more];
-    const idx = order.indexOf(sel);
-    const prev = order[idx - 1], next = order[idx + 1];
-
-    const item = (s) => `<li data-text="${esc(s.title.toLowerCase() + " " + s.text)}"><a href="#/questions/${s.id}" class="${s.id === selectedId ? "active" : ""}">` +
-      `<b>${s.num ? "Q" + s.num : "•"}</b><span>${esc(s.title)}</span></a></li>`;
-    const heading = sel.num
-      ? `<p class="muted small" style="margin:0 0 4px">Question ${sel.num} of ${questions.length}</p><h2>${esc(sel.title)}</h2>`
-      : `<h2>${esc(sel.title)}</h2>`;
-    const navLink = (s, label) => s
-      ? `<a class="btn ghost small" href="#/questions/${s.id}">${label === "prev" ? "← " : ""}${esc(s.num ? "Q" + s.num : s.title)}${label === "next" ? " →" : ""}</a>`
-      : "<span></span>";
-
-    view.innerHTML = `
-      <div class="qlayout">
-        <nav class="card qlist" aria-label="Questions">
-          <input type="search" id="q-search" placeholder="Search questions and answers…" aria-label="Search questions and answers">
-          <ol id="q-items">
-            <li class="group">Start here</li>${start.map(item).join("")}
-            <li class="group">Official questions</li>${questions.map(item).join("")}
-            <li class="group">More</li>${more.map(item).join("")}
-          </ol>
-        </nav>
-        <article class="card">
-          <div class="prose">${heading}<div style="margin-top:14px">${Markdown.render(sel.md, { resolveImage: resolveFigure })}</div></div>
-          <div class="qnav">${navLink(prev, "prev")}${navLink(next, "next")}</div>
-        </article>
-      </div>`;
-    bindLightbox(view);
-    const active = $("#q-items a.active");
-    if (active) active.scrollIntoView({ block: "nearest" });
-    $("#q-search").addEventListener("input", (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      for (const li of $$("#q-items li[data-text]")) li.hidden = Boolean(q) && !li.dataset.text.includes(q);
-    });
   }
 
   // ------------------------------------------------------------------
