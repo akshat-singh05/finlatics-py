@@ -34,6 +34,8 @@ def test_index_serves_the_web_app(client):
     assert "<title>Finlatics Ad Analytics</title>" in html
     for src in ("/ui/app.css", "/ui/app.js", "/ui/markdown.js", "/ui/vendor/plotly.min.js"):
         assert src in html
+    # The 20 questions live in reports/eda_findings.md, not in the app
+    assert "#/questions" not in html
 
 
 @pytest.mark.parametrize("path", ["/ui/app.css", "/ui/app.js", "/ui/markdown.js"])

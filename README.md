@@ -38,7 +38,7 @@ Company X ran display-ad campaigns through an ad network, **Advert Firm A**, fro
 | EDA report: the 20 official questions, 19 charts | [`reports/eda_findings.md`](reports/eda_findings.md) |
 | Model report: method, baselines, results, SHAP | [`reports/model_report.md`](reports/model_report.md) |
 | Walkthrough notebook (executed, with outputs) | [`notebooks/project_walkthrough.ipynb`](notebooks/project_walkthrough.ipynb) |
-| **Web app**: KPIs, breakdowns, segments, the 20 questions, predictor, model, data | `python app.py`, then open http://127.0.0.1:5000 |
+| **Web app**: KPIs, breakdowns, segments, predictor, model, data | `python app.py`, then open http://127.0.0.1:5000 |
 | REST API (same server) | `python app.py` |
 | Streamlit dashboard (alternative) | `streamlit run streamlit_app.py` |
 
@@ -285,11 +285,12 @@ The filter bar (campaign, engagement, banner, placement, date range) applies to 
 | Overview | KPI tiles for Advert Firm A (revenue, cost, margin, ROI), Company X (sales, ROAS, CPC, CPA) and the audience (displays, clicks, CTR, conversion rate); daily trend of any metric with a 7-day average; the metric by campaign and by engagement level |
 | Breakdown | Any metric by campaign, engagement, banner, placement, month or weekday, plus a sortable table of every metric |
 | Segments | Heatmap of any two dimensions (e.g. banner × placement) with highest and lowest segments |
-| 20 Questions | The answers to the 20 official questions from `reports/eda_findings.md`, with the charts, a search box and previous / next navigation |
 | Predict | Revenue, margin, ROI and a profitable / not-profitable call for a planned buy; the segment's history; the same buy compared across placements, banners, engagement levels or campaigns |
 | Model | Test results of the model against the rate-card baselines, model selection, and the full model report |
 | Data | The cleaned rows, sortable and paginated, with a CSV download of the current filters |
 | API | Every endpoint, with example links |
+
+The answers to the 20 official questions are not part of the app; they are in [`reports/eda_findings.md`](reports/eda_findings.md).
 
 Rates follow the report's rules: groups below the volume thresholds (1,000 clicks, 10,000 displays, 100 conversions, or $20 of cost for ROI) are faded and are not ranked. The app has light and dark themes and works on phones.
 
