@@ -53,8 +53,12 @@ def api_info():
             "GET  /api/info",
             "GET  /metrics",
             "GET  /metrics/<dimension>",
+            "GET  /pivot?rows=<dimension>&cols=<dimension>",
+            "GET  /data",
+            "GET  /data.csv",
             "GET  /insights",
             "GET  /model",
+            "GET  /report/<eda|model>",
             "POST /predict",
         ],
     })
